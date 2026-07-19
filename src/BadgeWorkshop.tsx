@@ -1327,9 +1327,6 @@ export function BadgeWorkshop() {
             </svg>
             <span>GITHUB</span>
           </a>
-          <span className="header-meta">
-            <i /> SVG → SOLID
-          </span>
         </div>
       </header>
 

@@ -129,16 +129,6 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid 
 }
 .github-link:hover { border-color: var(--line); color: var(--signal-deep); }
 .github-link svg { flex: 0 0 auto; }
-.header-meta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--muted);
-  font: 11px var(--font-geist-mono), monospace;
-  letter-spacing: .08em;
-}
-.header-meta i { width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px rgba(51, 200, 127, .65); }
-
 .workbench {
   display: grid;
   grid-template-columns: minmax(0, 1.55fr) minmax(310px, .7fr);
@@ -421,7 +411,6 @@ form label {
   .app-shell { padding: 10px 8px 18px; }
   .workspace-header { min-height: 40px; margin-bottom: 8px; padding: 0 3px; }
   .workspace-header h1 { font-size: 19px; }
-  .header-meta { font-size: 10px; }
   .header-actions { gap: 8px; }
   .theme-switcher button { width: 34px; justify-content: center; padding: 0; }
   .theme-switcher button span { display: none; }
@@ -438,7 +427,6 @@ form label {
 }
 
 @media (max-width: 440px) {
-  .header-meta { display: none; }
   .github-link span { display: none; }
   .url-row { grid-template-columns: 1fr; gap: 6px; }
   .url-row input { border-right: 1px solid var(--line-strong); }
