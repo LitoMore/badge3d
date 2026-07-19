@@ -758,7 +758,7 @@ function fitPreviewCamera(
   const horizontalHalfFov = Math.atan(
     Math.tan(verticalHalfFov) * camera.aspect,
   );
-  const viewDirection = new THREE.Vector3(0, -1, 0.85).normalize();
+  const viewDirection = new THREE.Vector3(0, -1, Math.sqrt(3)).normalize();
   const forward = viewDirection.clone().negate();
   const right = new THREE.Vector3()
     .crossVectors(forward, camera.up)
