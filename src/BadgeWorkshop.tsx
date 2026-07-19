@@ -51,6 +51,24 @@ type PreviewProps = {
   onReady: (group: THREE.Group, stats: ModelStats) => void;
 };
 
+type PreviewView = {
+  position: THREE.Vector3;
+  target: THREE.Vector3;
+  zoom: number;
+};
+
+type PreviewResetAnimation = {
+  startedAt: number;
+  duration: number;
+  fromTarget: THREE.Vector3;
+  toTarget: THREE.Vector3;
+  fromOrbit: THREE.Spherical;
+  toOrbit: THREE.Spherical;
+  thetaDelta: number;
+  fromZoom: number;
+  toZoom: number;
+};
+
 type PrintablePart = {
   color: string;
   meshes: THREE.Mesh[];
@@ -798,6 +816,12 @@ function fitPreviewCamera(
   controls.maxDistance = Math.max(150, distance * 4);
   controls.update();
   controls.saveState();
+
+  return {
+    position: camera.position.clone(),
+    target: controls.target.clone(),
+    zoom: camera.zoom,
+  };
 }
 
 function BadgePreview({
@@ -811,6 +835,8 @@ function BadgePreview({
   const rootRef = useRef<THREE.Group | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const controlsRef = useRef<OrbitControls | null>(null);
+  const homeViewRef = useRef<PreviewView | null>(null);
+  const resetAnimationRef = useRef<PreviewResetAnimation | null>(null);
   const [font, setFont] = useState<opentype.Font | null>(null);
 
   useEffect(() => {
@@ -866,6 +892,11 @@ function BadgePreview({
     const handlePointerLeave = () => {
       pointerInside = false;
     };
+    const cancelViewReset = () => {
+      if (!resetAnimationRef.current) return;
+      resetAnimationRef.current = null;
+      controls.enabled = true;
+    };
     const handlePointerDown = () => canvas.focus({ preventScroll: true });
     const handleKeyDown = (event: KeyboardEvent) => {
       const target = event.target;
@@ -889,6 +920,8 @@ function BadgePreview({
 
     canvas.addEventListener("pointerenter", handlePointerEnter);
     canvas.addEventListener("pointerleave", handlePointerLeave);
+    canvas.addEventListener("pointerdown", cancelViewReset, { capture: true });
+    canvas.addEventListener("wheel", cancelViewReset, { capture: true });
     canvas.addEventListener("pointerdown", handlePointerDown);
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
@@ -915,19 +948,70 @@ function BadgePreview({
       renderer.setSize(width, height, false);
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
-      if (rootRef.current) fitPreviewCamera(camera, controls, rootRef.current);
+      if (rootRef.current) {
+        cancelViewReset();
+        homeViewRef.current =
+          fitPreviewCamera(camera, controls, rootRef.current) ?? null;
+      }
     };
     const observer = new ResizeObserver(resize);
     observer.observe(host);
     resize();
 
     let frame = 0;
-    const animate = () => {
+    const resetOffset = new THREE.Vector3();
+    const resetOrbit = new THREE.Spherical();
+    const animate = (time: number) => {
       frame = requestAnimationFrame(animate);
-      controls.update();
+      const resetAnimation = resetAnimationRef.current;
+      if (resetAnimation) {
+        const progress = Math.min(
+          (time - resetAnimation.startedAt) / resetAnimation.duration,
+          1,
+        );
+        const eased = (1 - Math.cos(Math.PI * progress)) / 2;
+        const radius = Math.exp(
+          THREE.MathUtils.lerp(
+            Math.log(resetAnimation.fromOrbit.radius),
+            Math.log(resetAnimation.toOrbit.radius),
+            eased,
+          ),
+        );
+        resetOrbit.set(
+          radius,
+          THREE.MathUtils.lerp(
+            resetAnimation.fromOrbit.phi,
+            resetAnimation.toOrbit.phi,
+            eased,
+          ),
+          resetAnimation.fromOrbit.theta + resetAnimation.thetaDelta * eased,
+        );
+        controls.target.lerpVectors(
+          resetAnimation.fromTarget,
+          resetAnimation.toTarget,
+          eased,
+        );
+        camera.position
+          .copy(resetOffset.setFromSpherical(resetOrbit))
+          .add(controls.target);
+        camera.zoom = THREE.MathUtils.lerp(
+          resetAnimation.fromZoom,
+          resetAnimation.toZoom,
+          eased,
+        );
+        camera.updateProjectionMatrix();
+        camera.lookAt(controls.target);
+
+        if (progress === 1) {
+          resetAnimationRef.current = null;
+          controls.enabled = true;
+        }
+      } else {
+        controls.update();
+      }
       renderer.render(scene, camera);
     };
-    animate();
+    frame = requestAnimationFrame(animate);
 
     (host as HTMLDivElement & { scene?: THREE.Scene }).scene = scene;
 
@@ -937,10 +1021,16 @@ function BadgePreview({
       controls.dispose();
       canvas.removeEventListener("pointerenter", handlePointerEnter);
       canvas.removeEventListener("pointerleave", handlePointerLeave);
+      canvas.removeEventListener("pointerdown", cancelViewReset, {
+        capture: true,
+      });
+      canvas.removeEventListener("wheel", cancelViewReset, { capture: true });
       canvas.removeEventListener("pointerdown", handlePointerDown);
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
       window.removeEventListener("blur", handleWindowBlur);
+      resetAnimationRef.current = null;
+      homeViewRef.current = null;
       cameraRef.current = null;
       controlsRef.current = null;
       renderer.dispose();
@@ -973,7 +1063,10 @@ function BadgePreview({
     rootRef.current = group;
     scene.add(group);
     if (cameraRef.current && controlsRef.current) {
-      fitPreviewCamera(cameraRef.current, controlsRef.current, group);
+      resetAnimationRef.current = null;
+      controlsRef.current.enabled = true;
+      homeViewRef.current =
+        fitPreviewCamera(cameraRef.current, controlsRef.current, group) ?? null;
     }
     onReady(group, stats);
 
@@ -1012,7 +1105,67 @@ function BadgePreview({
   }, [autoRotate]);
 
   useEffect(() => {
-    controlsRef.current?.reset();
+    const camera = cameraRef.current;
+    const controls = controlsRef.current;
+    const homeView = homeViewRef.current;
+    if (!camera || !controls || !homeView) return;
+
+    const currentView = {
+      position: camera.position.clone(),
+      target: controls.target.clone(),
+      zoom: camera.zoom,
+    };
+    const dampingEnabled = controls.enableDamping;
+    const autoRotateEnabled = controls.autoRotate;
+    controls.enableDamping = false;
+    controls.autoRotate = false;
+    controls.update();
+    controls.enableDamping = dampingEnabled;
+    controls.autoRotate = autoRotateEnabled;
+    camera.position.copy(currentView.position);
+    controls.target.copy(currentView.target);
+    camera.zoom = currentView.zoom;
+    camera.updateProjectionMatrix();
+    camera.lookAt(controls.target);
+
+    const reduceMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    if (reduceMotion) {
+      resetAnimationRef.current = null;
+      camera.position.copy(homeView.position);
+      controls.target.copy(homeView.target);
+      camera.zoom = homeView.zoom;
+      camera.updateProjectionMatrix();
+      controls.enabled = true;
+      camera.lookAt(controls.target);
+      return;
+    }
+
+    const fromOrbit = new THREE.Spherical().setFromVector3(
+      currentView.position.clone().sub(currentView.target),
+    );
+    const toOrbit = new THREE.Spherical().setFromVector3(
+      homeView.position.clone().sub(homeView.target),
+    );
+    const thetaDelta =
+      THREE.MathUtils.euclideanModulo(
+        toOrbit.theta - fromOrbit.theta + Math.PI,
+        Math.PI * 2,
+      ) - Math.PI;
+
+    resetAnimationRef.current = {
+      startedAt: performance.now(),
+      duration: 850,
+      fromTarget: currentView.target,
+      toTarget: homeView.target.clone(),
+      fromOrbit,
+      toOrbit,
+      thetaDelta,
+      fromZoom: currentView.zoom,
+      toZoom: homeView.zoom,
+    };
+    controls.enabled = false;
   }, [resetToken]);
 
   return (
