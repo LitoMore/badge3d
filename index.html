@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#f2eee5" />
+    <script>
+      try {
+        const theme = localStorage.getItem("badge3d-color-theme");
+        const isDark = theme === "dark" || (theme !== "light" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (theme === "light" || theme === "dark") document.documentElement.dataset.theme = theme;
+        document.querySelector('meta[name="theme-color"]').content = isDark ? "#171816" : "#f2eee5";
+      } catch {}
+    </script>
+    <meta name="description" content="Paste a shields.io badge URL, preview the raised model, and export a print-ready STL." />
+    <link rel="icon" type="image/webp" href="/badge3d.webp" />
+    <title>Badge3D — Turn shields.io badges into 3D models</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
