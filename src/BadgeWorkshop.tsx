@@ -1,5 +1,11 @@
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
-import { ArrowRight, GitFork, Monitor, Moon, RotateCcw, Sun } from "lucide-react";
+import {
+  ArrowRight,
+  Monitor,
+  Moon,
+  RotateCcw,
+  Sun,
+} from "lucide-react";
 import * as THREE from "three";
 import * as opentype from "opentype.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
@@ -80,7 +86,10 @@ function roundedRect(width: number, height: number, radius: number) {
 }
 
 function roundedPlateGeometry(width: number, height: number, radius: number) {
-  const geometry = new THREE.ShapeGeometry(roundedRect(width, height, radius), 12);
+  const geometry = new THREE.ShapeGeometry(
+    roundedRect(width, height, radius),
+    12,
+  );
   const positions = geometry.getAttribute("position");
   const uv = new Float32Array(positions.count * 2);
   for (let index = 0; index < positions.count; index += 1) {
@@ -107,7 +116,8 @@ function segmentShape(
   const shape = new THREE.Shape();
   shape.moveTo(xMin + leftRadius, bottom);
   shape.lineTo(xMax - rightRadius, bottom);
-  if (rightRadius) shape.quadraticCurveTo(xMax, bottom, xMax, bottom + rightRadius);
+  if (rightRadius)
+    shape.quadraticCurveTo(xMax, bottom, xMax, bottom + rightRadius);
   else shape.lineTo(xMax, bottom);
   shape.lineTo(xMax, top - rightRadius);
   if (rightRadius) shape.quadraticCurveTo(xMax, top, xMax - rightRadius, top);
@@ -116,7 +126,8 @@ function segmentShape(
   if (leftRadius) shape.quadraticCurveTo(xMin, top, xMin, top - leftRadius);
   else shape.lineTo(xMin, top);
   shape.lineTo(xMin, bottom + leftRadius);
-  if (leftRadius) shape.quadraticCurveTo(xMin, bottom, xMin + leftRadius, bottom);
+  if (leftRadius)
+    shape.quadraticCurveTo(xMin, bottom, xMin + leftRadius, bottom);
   else shape.lineTo(xMin, bottom);
   return shape;
 }
@@ -125,28 +136,38 @@ function svgMetrics(svg: string) {
   const doc = new DOMParser().parseFromString(svg, "image/svg+xml");
   const root = doc.documentElement;
   const viewBox = root.getAttribute("viewBox")?.split(/[ ,]+/).map(Number);
-  const width = viewBox?.[2] || Number.parseFloat(root.getAttribute("width") || "100");
-  const height = viewBox?.[3] || Number.parseFloat(root.getAttribute("height") || "20");
+  const width =
+    viewBox?.[2] || Number.parseFloat(root.getAttribute("width") || "100");
+  const height =
+    viewBox?.[3] || Number.parseFloat(root.getAttribute("height") || "20");
   return { doc, width, height };
 }
 
 function imageHref(node: Element) {
-  return node.getAttribute("href")
-    || node.getAttributeNS("http://www.w3.org/1999/xlink", "href")
-    || "";
+  return (
+    node.getAttribute("href") ||
+    node.getAttributeNS("http://www.w3.org/1999/xlink", "href") ||
+    ""
+  );
 }
 
 function decodeSvgDataUri(source: string) {
   const comma = source.indexOf(",");
   if (comma < 0) return null;
   const metadata = source.slice(5, comma).toLowerCase();
-  if (!source.toLowerCase().startsWith("data:") || !metadata.startsWith("image/svg+xml")) return null;
+  if (
+    !source.toLowerCase().startsWith("data:") ||
+    !metadata.startsWith("image/svg+xml")
+  )
+    return null;
 
   try {
     const payload = source.slice(comma + 1);
     if (metadata.split(";").includes("base64")) {
       const binary = window.atob(payload);
-      const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
+      const bytes = Uint8Array.from(binary, (character) =>
+        character.charCodeAt(0),
+      );
       return new TextDecoder().decode(bytes);
     }
     return decodeURIComponent(payload);
@@ -160,20 +181,32 @@ function embeddedSvgImage(node: Element) {
   if (!source) return null;
 
   const doc = new DOMParser().parseFromString(source, "image/svg+xml");
-  if (doc.querySelector("parsererror") || doc.documentElement.localName !== "svg") return null;
+  if (
+    doc.querySelector("parsererror") ||
+    doc.documentElement.localName !== "svg"
+  )
+    return null;
   const root = doc.documentElement;
   const viewBox = root.getAttribute("viewBox")?.split(/[ ,]+/).map(Number);
   const minX = viewBox?.[0] || 0;
   const minY = viewBox?.[1] || 0;
-  const viewWidth = viewBox?.[2] || Number.parseFloat(root.getAttribute("width") || "0");
-  const viewHeight = viewBox?.[3] || Number.parseFloat(root.getAttribute("height") || "0");
+  const viewWidth =
+    viewBox?.[2] || Number.parseFloat(root.getAttribute("width") || "0");
+  const viewHeight =
+    viewBox?.[3] || Number.parseFloat(root.getAttribute("height") || "0");
   const x = Number.parseFloat(node.getAttribute("x") || "0");
   const y = Number.parseFloat(node.getAttribute("y") || "0");
   const width = Number.parseFloat(node.getAttribute("width") || "0");
   const height = Number.parseFloat(node.getAttribute("height") || "0");
-  if (![viewWidth, viewHeight, width, height].every((value) => Number.isFinite(value) && value > 0)) return null;
+  if (
+    ![viewWidth, viewHeight, width, height].every(
+      (value) => Number.isFinite(value) && value > 0,
+    )
+  )
+    return null;
 
-  const preserveAspectRatio = node.getAttribute("preserveAspectRatio") || "xMidYMid meet";
+  const preserveAspectRatio =
+    node.getAttribute("preserveAspectRatio") || "xMidYMid meet";
   let scaleX = width / viewWidth;
   let scaleY = height / viewHeight;
   let offsetX = 0;
@@ -186,10 +219,14 @@ function embeddedSvgImage(node: Element) {
     const renderedHeight = viewHeight * scale;
     offsetX = preserveAspectRatio.includes("xMin")
       ? 0
-      : preserveAspectRatio.includes("xMax") ? width - renderedWidth : (width - renderedWidth) / 2;
+      : preserveAspectRatio.includes("xMax")
+        ? width - renderedWidth
+        : (width - renderedWidth) / 2;
     offsetY = preserveAspectRatio.includes("YMin")
       ? 0
-      : preserveAspectRatio.includes("YMax") ? height - renderedHeight : (height - renderedHeight) / 2;
+      : preserveAspectRatio.includes("YMax")
+        ? height - renderedHeight
+        : (height - renderedHeight) / 2;
     scaleX = scale;
     scaleY = scale;
   }
@@ -226,7 +263,9 @@ function inheritedTextFill(node: Element) {
   let current: Element | null = node;
   while (current) {
     const directFill = current.getAttribute("fill");
-    const styleFill = current.getAttribute("style")?.match(/(?:^|;)\s*fill\s*:\s*([^;]+)/i)?.[1];
+    const styleFill = current
+      .getAttribute("style")
+      ?.match(/(?:^|;)\s*fill\s*:\s*([^;]+)/i)?.[1];
     const fill = directFill || styleFill;
     if (fill && fill !== "none" && !fill.startsWith("url(")) return fill.trim();
     current = current.parentElement;
@@ -236,7 +275,10 @@ function inheritedTextFill(node: Element) {
 
 function svgColor(fill: string, fallback = 0x34363a) {
   const color = new THREE.Color(fallback);
-  if (/^(?:#[\da-f]{3,8}|rgba?\(.+\)|hsla?\(.+\)|[a-z]+)$/i.test(fill) && fill !== "currentColor") {
+  if (
+    /^(?:#[\da-f]{3,8}|rgba?\(.+\)|hsla?\(.+\)|[a-z]+)$/i.test(fill) &&
+    fill !== "currentColor"
+  ) {
     color.setStyle(fill);
   }
   return color;
@@ -248,16 +290,19 @@ function badgeSegments(doc: Document, svgWidth: number, svgHeight: number) {
       x: Number.parseFloat(node.getAttribute("x") || "0"),
       y: Number.parseFloat(node.getAttribute("y") || "0"),
       width: Number.parseFloat(node.getAttribute("width") || "0"),
-      height: Number.parseFloat(node.getAttribute("height") || String(svgHeight)),
+      height: Number.parseFloat(
+        node.getAttribute("height") || String(svgHeight),
+      ),
       fill: node.getAttribute("fill") || "",
     }))
-    .filter((segment) => (
-      segment.width > 0
-      && segment.height >= svgHeight * 0.95
-      && segment.y <= svgHeight * 0.05
-      && !segment.fill.startsWith("url(")
-      && segment.fill !== "none"
-    ))
+    .filter(
+      (segment) =>
+        segment.width > 0 &&
+        segment.height >= svgHeight * 0.95 &&
+        segment.y <= svgHeight * 0.05 &&
+        !segment.fill.startsWith("url(") &&
+        segment.fill !== "none",
+    )
     .map((segment) => ({
       ...segment,
       x: Math.max(0, segment.x),
@@ -276,8 +321,10 @@ function getTextOutline(font: opentype.Font, text: string, fontSize: number) {
   characters.forEach((character, index) => {
     const glyph = font.charToGlyph(character);
     glyph.path.commands.forEach((command) => {
-      if (command.type === "M") outline.moveTo(cursor + command.x * unitScale, command.y * unitScale);
-      if (command.type === "L") outline.lineTo(cursor + command.x * unitScale, command.y * unitScale);
+      if (command.type === "M")
+        outline.moveTo(cursor + command.x * unitScale, command.y * unitScale);
+      if (command.type === "L")
+        outline.lineTo(cursor + command.x * unitScale, command.y * unitScale);
       if (command.type === "Q") {
         outline.quadraticCurveTo(
           cursor + command.x1 * unitScale,
@@ -299,7 +346,9 @@ function getTextOutline(font: opentype.Font, text: string, fontSize: number) {
       if (command.type === "Z") outline.closePath();
     });
 
-    const nextGlyph = characters[index + 1] ? font.charToGlyph(characters[index + 1]) : null;
+    const nextGlyph = characters[index + 1]
+      ? font.charToGlyph(characters[index + 1])
+      : null;
     cursor += (glyph.advanceWidth || font.unitsPerEm) * unitScale;
     if (nextGlyph) cursor += font.getKerningValue(glyph, nextGlyph) * unitScale;
   });
@@ -334,7 +383,11 @@ function buildModel(svg: string, params: ModelParams, font: opentype.Font) {
       );
       const mesh = new THREE.Mesh(geometry, [
         new THREE.MeshBasicMaterial({ color }),
-        new THREE.MeshStandardMaterial({ color, roughness: 0.58, metalness: 0.02 }),
+        new THREE.MeshStandardMaterial({
+          color,
+          roughness: 0.58,
+          metalness: 0.02,
+        }),
       ]);
       mesh.name = `Badge color segment ${index + 1}: ${segment.fill}`;
       group.add(mesh);
@@ -346,7 +399,11 @@ function buildModel(svg: string, params: ModelParams, font: opentype.Font) {
     );
     const base = new THREE.Mesh(
       baseGeometry,
-      new THREE.MeshStandardMaterial({ color: 0x34363a, roughness: 0.62, metalness: 0.05 }),
+      new THREE.MeshStandardMaterial({
+        color: 0x34363a,
+        roughness: 0.62,
+        metalness: 0.05,
+      }),
     );
     base.name = "Badge base";
     group.add(base);
@@ -356,12 +413,16 @@ function buildModel(svg: string, params: ModelParams, font: opentype.Font) {
     .map(embeddedSvgImage)
     .filter((image) => image !== null);
   logoImages.forEach((image, imageIndex) => {
-    const embeddedRoot = new XMLSerializer().serializeToString(image.doc.documentElement);
+    const embeddedRoot = new XMLSerializer().serializeToString(
+      image.doc.documentElement,
+    );
     const flipY = image.minY * 2 + image.viewHeight;
     const parsed = new SVGLoader().parse(
       `<svg xmlns="http://www.w3.org/2000/svg"><g transform="translate(0 ${flipY}) scale(1 -1)">${embeddedRoot}</g></svg>`,
     );
-    const logoName = image.doc.querySelector("title")?.textContent?.trim() || `Logo ${imageIndex + 1}`;
+    const logoName =
+      image.doc.querySelector("title")?.textContent?.trim() ||
+      `Logo ${imageIndex + 1}`;
 
     parsed.paths.forEach((path, pathIndex) => {
       const shapes = path.toShapes();
@@ -375,13 +436,22 @@ function buildModel(svg: string, params: ModelParams, font: opentype.Font) {
       const color = path.color.clone();
       const mesh = new THREE.Mesh(geometry, [
         new THREE.MeshBasicMaterial({ color }),
-        new THREE.MeshStandardMaterial({ color, roughness: 0.46, metalness: 0 }),
+        new THREE.MeshStandardMaterial({
+          color,
+          roughness: 0.46,
+          metalness: 0,
+        }),
       ]);
       mesh.name = `Raised logo: ${logoName}${parsed.paths.length > 1 ? ` (${pathIndex + 1})` : ""}`;
       mesh.position.set(
-        (image.x + image.offsetX - image.minX * image.scaleX) * mmPerUnit - width / 2,
-        height / 2
-          - (image.y + image.offsetY + image.renderedHeight + image.minY * image.scaleY) * mmPerUnit,
+        (image.x + image.offsetX - image.minX * image.scaleX) * mmPerUnit -
+          width / 2,
+        height / 2 -
+          (image.y +
+            image.offsetY +
+            image.renderedHeight +
+            image.minY * image.scaleY) *
+            mmPerUnit,
         params.baseHeight,
       );
       group.add(mesh);
@@ -398,10 +468,14 @@ function buildModel(svg: string, params: ModelParams, font: opentype.Font) {
     const scale = cumulativeScale(node);
     const x = Number.parseFloat(node.getAttribute("x") || "0") * scale;
     const y = Number.parseFloat(node.getAttribute("y") || "0") * scale;
-    const textLength = Number.parseFloat(node.getAttribute("textLength") || "0") * scale;
-    const fontSize = Number.parseFloat(
-      node.getAttribute("font-size") || node.closest("[font-size]")?.getAttribute("font-size") || "11",
-    ) * scale;
+    const textLength =
+      Number.parseFloat(node.getAttribute("textLength") || "0") * scale;
+    const fontSize =
+      Number.parseFloat(
+        node.getAttribute("font-size") ||
+          node.closest("[font-size]")?.getAttribute("font-size") ||
+          "11",
+      ) * scale;
     const outline = getTextOutline(font, content, fontSize);
     const bounds = outline.getBoundingBox();
     const naturalWidth = Math.max(0.001, bounds.x2 - bounds.x1);
@@ -430,10 +504,7 @@ function buildModel(svg: string, params: ModelParams, font: opentype.Font) {
       roughness: 0.46,
       metalness: 0,
     });
-    const mesh = new THREE.Mesh(
-      geometry,
-      [capMaterial, sideMaterial],
-    );
+    const mesh = new THREE.Mesh(geometry, [capMaterial, sideMaterial]);
     mesh.name = `Raised text: ${content}`;
     mesh.position.set(
       x * mmPerUnit - width / 2 - geometryWidth / 2 - geometryBounds.min.x,
@@ -447,7 +518,9 @@ function buildModel(svg: string, params: ModelParams, font: opentype.Font) {
   group.traverse((item) => {
     if (item instanceof THREE.Mesh) {
       const geometry = item.geometry;
-      triangles += geometry.index ? geometry.index.count / 3 : geometry.attributes.position.count / 3;
+      triangles += geometry.index
+        ? geometry.index.count / 3
+        : geometry.attributes.position.count / 3;
     }
   });
 
@@ -468,9 +541,15 @@ function createSvgTexture(svg: string) {
     doc.querySelectorAll("image").forEach((node) => {
       if (decodeSvgDataUri(imageHref(node))) node.remove();
     });
-    doc.querySelectorAll('text, [aria-hidden="true"], [fill^="url("]').forEach((node) => node.remove());
-    doc.querySelectorAll("[clip-path]").forEach((node) => node.removeAttribute("clip-path"));
-    doc.querySelectorAll("filter, linearGradient, clipPath").forEach((node) => node.remove());
+    doc
+      .querySelectorAll('text, [aria-hidden="true"], [fill^="url("]')
+      .forEach((node) => node.remove());
+    doc
+      .querySelectorAll("[clip-path]")
+      .forEach((node) => node.removeAttribute("clip-path"));
+    doc
+      .querySelectorAll("filter, linearGradient, clipPath")
+      .forEach((node) => node.remove());
     const flatSvg = new XMLSerializer().serializeToString(doc.documentElement);
     const blob = new Blob([flatSvg], { type: "image/svg+xml" });
     const url = URL.createObjectURL(blob);
@@ -515,10 +594,14 @@ function printableModel(model: THREE.Group) {
 }
 
 function meshColor(mesh: THREE.Mesh) {
-  const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-  const material = materials.find((candidate) => "color" in candidate) as THREE.Material & {
-    color?: THREE.Color;
-  } | undefined;
+  const materials = Array.isArray(mesh.material)
+    ? mesh.material
+    : [mesh.material];
+  const material = materials.find((candidate) => "color" in candidate) as
+    | (THREE.Material & {
+        color?: THREE.Color;
+      })
+    | undefined;
   return `#${material?.color?.getHexString(THREE.SRGBColorSpace) || "808080"}`.toUpperCase();
 }
 
@@ -531,7 +614,10 @@ function printableParts(printable: THREE.Group) {
     meshes.push(node);
     byColor.set(color, meshes);
   });
-  return Array.from(byColor, ([color, meshes]): PrintablePart => ({ color, meshes }));
+  return Array.from(
+    byColor,
+    ([color, meshes]): PrintablePart => ({ color, meshes }),
+  );
 }
 
 function partAsGroup(part: PrintablePart) {
@@ -555,13 +641,17 @@ function downloadBlob(blob: Blob, filename: string) {
 }
 
 function xmlEscape(value: string) {
-  return value.replace(/[&<>"']/g, (character) => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    "\"": "&quot;",
-    "'": "&apos;",
-  })[character] || character);
+  return value.replace(
+    /[&<>"']/g,
+    (character) =>
+      ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&apos;",
+      })[character] || character,
+  );
 }
 
 function coordinate(value: number) {
@@ -579,17 +669,23 @@ function partMeshXml(part: PrintablePart) {
     geometry.applyMatrix4(source.matrixWorld);
     const position = geometry.getAttribute("position");
     for (let index = 0; index < position.count; index += 1) {
-      vertices.push(`<vertex x="${coordinate(position.getX(index))}" y="${coordinate(position.getY(index))}" z="${coordinate(position.getZ(index))}"/>`);
+      vertices.push(
+        `<vertex x="${coordinate(position.getX(index))}" y="${coordinate(position.getY(index))}" z="${coordinate(position.getZ(index))}"/>`,
+      );
     }
 
     const indices = geometry.index;
     if (indices) {
       for (let index = 0; index < indices.count; index += 3) {
-        triangles.push(`<triangle v1="${vertexOffset + indices.getX(index)}" v2="${vertexOffset + indices.getX(index + 1)}" v3="${vertexOffset + indices.getX(index + 2)}"/>`);
+        triangles.push(
+          `<triangle v1="${vertexOffset + indices.getX(index)}" v2="${vertexOffset + indices.getX(index + 1)}" v3="${vertexOffset + indices.getX(index + 2)}"/>`,
+        );
       }
     } else {
       for (let index = 0; index < position.count; index += 3) {
-        triangles.push(`<triangle v1="${vertexOffset + index}" v2="${vertexOffset + index + 1}" v3="${vertexOffset + index + 2}"/>`);
+        triangles.push(
+          `<triangle v1="${vertexOffset + index}" v2="${vertexOffset + index + 1}" v3="${vertexOffset + index + 2}"/>`,
+        );
       }
     }
     vertexOffset += position.count;
@@ -600,19 +696,27 @@ function partMeshXml(part: PrintablePart) {
 }
 
 function create3mf(parts: PrintablePart[]) {
-  const materialXml = parts.map((part, index) => (
-    `<base name="Color ${index + 1} ${xmlEscape(part.color)}" displaycolor="${part.color}FF"/>`
-  )).join("");
-  const objectXml = parts.map((part, index) => (
-    `<object id="${index + 2}" type="model" name="Color ${index + 1} ${xmlEscape(part.color)}" pid="1" pindex="${index}">${partMeshXml(part)}</object>`
-  )).join("");
+  const materialXml = parts
+    .map(
+      (part, index) =>
+        `<base name="Color ${index + 1} ${xmlEscape(part.color)}" displaycolor="${part.color}FF"/>`,
+    )
+    .join("");
+  const objectXml = parts
+    .map(
+      (part, index) =>
+        `<object id="${index + 2}" type="model" name="Color ${index + 1} ${xmlEscape(part.color)}" pid="1" pindex="${index}">${partMeshXml(part)}</object>`,
+    )
+    .join("");
   const assemblyId = parts.length + 2;
-  const components = parts.map((_, index) => `<component objectid="${index + 2}"/>`).join("");
+  const components = parts
+    .map((_, index) => `<component objectid="${index + 2}"/>`)
+    .join("");
   const modelXml = `<?xml version="1.0" encoding="UTF-8"?>
 <model unit="millimeter" xml:lang="en-US" xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02">
   <metadata name="Title">Badge3D multicolor badge</metadata>
   <metadata name="Application">Badge3D</metadata>
-  <metadata name="Description">Aligned color parts generated from a shields.io badge</metadata>
+  <metadata name="Description">Aligned color parts generated from a Shields.io badge</metadata>
   <resources>
     <basematerials id="1">${materialXml}</basematerials>
     ${objectXml}
@@ -630,11 +734,14 @@ function create3mf(parts: PrintablePart[]) {
   <Relationship Target="/3D/3dmodel.model" Id="rel0" Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"/>
 </Relationships>`;
 
-  return zipSync({
-    "[Content_Types].xml": strToU8(contentTypes),
-    "_rels/.rels": strToU8(relationships),
-    "3D/3dmodel.model": strToU8(modelXml),
-  }, { level: 6 });
+  return zipSync(
+    {
+      "[Content_Types].xml": strToU8(contentTypes),
+      "_rels/.rels": strToU8(relationships),
+      "3D/3dmodel.model": strToU8(modelXml),
+    },
+    { level: 6 },
+  );
 }
 
 function fitPreviewCamera(
@@ -648,10 +755,14 @@ function fitPreviewCamera(
 
   const sphere = bounds.getBoundingSphere(new THREE.Sphere());
   const verticalHalfFov = THREE.MathUtils.degToRad(camera.fov / 2);
-  const horizontalHalfFov = Math.atan(Math.tan(verticalHalfFov) * camera.aspect);
+  const horizontalHalfFov = Math.atan(
+    Math.tan(verticalHalfFov) * camera.aspect,
+  );
   const viewDirection = new THREE.Vector3(0, -1, 0.85).normalize();
   const forward = viewDirection.clone().negate();
-  const right = new THREE.Vector3().crossVectors(forward, camera.up).normalize();
+  const right = new THREE.Vector3()
+    .crossVectors(forward, camera.up)
+    .normalize();
   const viewUp = new THREE.Vector3().crossVectors(right, forward).normalize();
   const offset = new THREE.Vector3();
   let requiredDistance = 0;
@@ -661,8 +772,12 @@ function fitPreviewCamera(
       for (const z of [bounds.min.z, bounds.max.z]) {
         offset.set(x, y, z).sub(sphere.center);
         const depthOffset = offset.dot(viewDirection);
-        const horizontalDistance = Math.abs(offset.dot(right)) / Math.max(Math.tan(horizontalHalfFov), 0.01);
-        const verticalDistance = Math.abs(offset.dot(viewUp)) / Math.max(Math.tan(verticalHalfFov), 0.01);
+        const horizontalDistance =
+          Math.abs(offset.dot(right)) /
+          Math.max(Math.tan(horizontalHalfFov), 0.01);
+        const verticalDistance =
+          Math.abs(offset.dot(viewUp)) /
+          Math.max(Math.tan(verticalHalfFov), 0.01);
         requiredDistance = Math.max(
           requiredDistance,
           depthOffset + horizontalDistance,
@@ -685,7 +800,13 @@ function fitPreviewCamera(
   controls.saveState();
 }
 
-function BadgePreview({ svg, params, autoRotate, resetToken, onReady }: PreviewProps) {
+function BadgePreview({
+  svg,
+  params,
+  autoRotate,
+  resetToken,
+  onReady,
+}: PreviewProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const rootRef = useRef<THREE.Group | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
@@ -734,17 +855,30 @@ function BadgePreview({ svg, params, autoRotate, resetToken, onReady }: PreviewP
 
     const setSpacePanning = (active: boolean) => {
       controls.enablePan = active;
-      controls.mouseButtons.LEFT = active ? THREE.MOUSE.PAN : defaultLeftMouseButton;
+      controls.mouseButtons.LEFT = active
+        ? THREE.MOUSE.PAN
+        : defaultLeftMouseButton;
       canvas.classList.toggle("space-panning", active);
     };
-    const handlePointerEnter = () => { pointerInside = true; };
-    const handlePointerLeave = () => { pointerInside = false; };
+    const handlePointerEnter = () => {
+      pointerInside = true;
+    };
+    const handlePointerLeave = () => {
+      pointerInside = false;
+    };
     const handlePointerDown = () => canvas.focus({ preventScroll: true });
     const handleKeyDown = (event: KeyboardEvent) => {
       const target = event.target;
-      const isTyping = target instanceof HTMLElement
-        && (target.matches("input, textarea, select, button") || target.isContentEditable);
-      if (event.code !== "Space" || isTyping || (!pointerInside && document.activeElement !== canvas)) return;
+      const isTyping =
+        target instanceof HTMLElement &&
+        (target.matches("input, textarea, select, button") ||
+          target.isContentEditable);
+      if (
+        event.code !== "Space" ||
+        isTyping ||
+        (!pointerInside && document.activeElement !== canvas)
+      )
+        return;
       event.preventDefault();
       setSpacePanning(true);
     };
@@ -815,7 +949,9 @@ function BadgePreview({ svg, params, autoRotate, resetToken, onReady }: PreviewP
   }, []);
 
   useEffect(() => {
-    const host = hostRef.current as (HTMLDivElement & { scene?: THREE.Scene }) | null;
+    const host = hostRef.current as
+      | (HTMLDivElement & { scene?: THREE.Scene })
+      | null;
     const scene = host?.scene;
     if (!scene || !font) return;
 
@@ -824,7 +960,9 @@ function BadgePreview({ svg, params, autoRotate, resetToken, onReady }: PreviewP
       rootRef.current.traverse((item) => {
         if (item instanceof THREE.Mesh) {
           item.geometry.dispose();
-          const materials = Array.isArray(item.material) ? item.material : [item.material];
+          const materials = Array.isArray(item.material)
+            ? item.material
+            : [item.material];
           materials.forEach((material) => material.dispose());
         }
       });
@@ -840,26 +978,28 @@ function BadgePreview({ svg, params, autoRotate, resetToken, onReady }: PreviewP
     onReady(group, stats);
 
     let active = true;
-    createSvgTexture(svg).then((texture) => {
-      if (!active || rootRef.current !== group) {
-        texture.dispose();
-        return;
-      }
-      const plate = new THREE.Mesh(
-        roundedPlateGeometry(stats.width, stats.height, params.radius),
-        new THREE.MeshBasicMaterial({
-          map: texture,
-          transparent: false,
-          depthWrite: false,
-          polygonOffset: true,
-          polygonOffsetFactor: -2,
-        }),
-      );
-      plate.name = "Color preview";
-      plate.position.z = params.baseHeight + 0.012;
-      plate.userData.previewOnly = true;
-      group.add(plate);
-    }).catch(() => undefined);
+    createSvgTexture(svg)
+      .then((texture) => {
+        if (!active || rootRef.current !== group) {
+          texture.dispose();
+          return;
+        }
+        const plate = new THREE.Mesh(
+          roundedPlateGeometry(stats.width, stats.height, params.radius),
+          new THREE.MeshBasicMaterial({
+            map: texture,
+            transparent: false,
+            depthWrite: false,
+            polygonOffset: true,
+            polygonOffsetFactor: -2,
+          }),
+        );
+        plate.name = "Color preview";
+        plate.position.z = params.baseHeight + 0.012;
+        plate.userData.previewOnly = true;
+        group.add(plate);
+      })
+      .catch(() => undefined);
 
     return () => {
       active = false;
@@ -875,10 +1015,24 @@ function BadgePreview({ svg, params, autoRotate, resetToken, onReady }: PreviewP
     controlsRef.current?.reset();
   }, [resetToken]);
 
-  return <div className="preview-canvas" ref={hostRef} aria-label="Interactive 3D badge preview" />;
+  return (
+    <div
+      className="preview-canvas"
+      ref={hostRef}
+      aria-label="Interactive 3D badge preview"
+    />
+  );
 }
 
-function RangeControl({ label, value, min, max, step, unit, onChange }: {
+function RangeControl({
+  label,
+  value,
+  min,
+  max,
+  step,
+  unit,
+  onChange,
+}: {
   label: string;
   value: number;
   min: number;
@@ -890,7 +1044,12 @@ function RangeControl({ label, value, min, max, step, unit, onChange }: {
   const percentage = ((value - min) / (max - min)) * 100;
   return (
     <label className="range-control">
-      <span><b>{label}</b><output>{value.toFixed(step < 1 ? 1 : 0)} {unit}</output></span>
+      <span>
+        <b>{label}</b>
+        <output>
+          {value.toFixed(step < 1 ? 1 : 0)} {unit}
+        </output>
+      </span>
       <input
         type="range"
         min={min}
@@ -908,7 +1067,9 @@ export function BadgeWorkshop() {
   const [colorTheme, setColorTheme] = useState<ColorTheme>(() => {
     try {
       const storedTheme = window.localStorage.getItem("badge3d-color-theme");
-      return storedTheme === "light" || storedTheme === "dark" ? storedTheme : "system";
+      return storedTheme === "light" || storedTheme === "dark"
+        ? storedTheme
+        : "system";
     } catch {
       return "system";
     }
@@ -922,10 +1083,10 @@ export function BadgeWorkshop() {
     height: DEFAULT_MODEL_HEIGHT,
     baseHeight: DEFAULT_BASE_HEIGHT,
     relief: DEFAULT_RELIEF,
-    radius: DEFAULT_MODEL_HEIGHT * 3 / 20,
+    radius: (DEFAULT_MODEL_HEIGHT * 3) / 20,
   });
   const [stats, setStats] = useState<ModelStats>({
-    width: DEFAULT_MODEL_HEIGHT * 88 / 20,
+    width: (DEFAULT_MODEL_HEIGHT * 88) / 20,
     height: DEFAULT_MODEL_HEIGHT,
     depth: DEFAULT_BASE_HEIGHT + DEFAULT_RELIEF,
     triangles: 0,
@@ -937,27 +1098,37 @@ export function BadgeWorkshop() {
   useEffect(() => {
     const root = document.documentElement;
     const systemTheme = window.matchMedia("(prefers-color-scheme: dark)");
-    const themeColor = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+    const themeColor = document.querySelector<HTMLMetaElement>(
+      'meta[name="theme-color"]',
+    );
 
     const applyTheme = () => {
       if (colorTheme === "system") {
         root.removeAttribute("data-theme");
-        themeColor?.setAttribute("content", systemTheme.matches ? "#171816" : "#f2eee5");
+        themeColor?.setAttribute(
+          "content",
+          systemTheme.matches ? "#171816" : "#f2eee5",
+        );
       } else {
         root.dataset.theme = colorTheme;
-        themeColor?.setAttribute("content", colorTheme === "dark" ? "#171816" : "#f2eee5");
+        themeColor?.setAttribute(
+          "content",
+          colorTheme === "dark" ? "#171816" : "#f2eee5",
+        );
       }
     };
 
     try {
-      if (colorTheme === "system") window.localStorage.removeItem("badge3d-color-theme");
+      if (colorTheme === "system")
+        window.localStorage.removeItem("badge3d-color-theme");
       else window.localStorage.setItem("badge3d-color-theme", colorTheme);
     } catch {
       // The theme still applies for this visit when storage is unavailable.
     }
 
     applyTheme();
-    if (colorTheme === "system") systemTheme.addEventListener("change", applyTheme);
+    if (colorTheme === "system")
+      systemTheme.addEventListener("change", applyTheme);
     return () => systemTheme.removeEventListener("change", applyTheme);
   }, [colorTheme]);
 
@@ -969,8 +1140,11 @@ export function BadgeWorkshop() {
     const timeout = window.setTimeout(() => controller.abort(), 12000);
     try {
       const target = new URL(nextUrl);
-      if (target.protocol !== "https:" || !["shields.io", "img.shields.io"].includes(target.hostname)) {
-        throw new Error("Paste a secure shields.io URL.");
+      if (
+        target.protocol !== "https:" ||
+        !["shields.io", "img.shields.io"].includes(target.hostname)
+      ) {
+        throw new Error("Paste a secure Shields.io URL.");
       }
       const response = await fetch(target, {
         headers: { Accept: "image/svg+xml" },
@@ -980,11 +1154,14 @@ export function BadgeWorkshop() {
       if (!response.ok || !source.trimStart().startsWith("<svg")) {
         throw new Error("That URL did not return a valid SVG badge.");
       }
-      if (source.length > 250_000) throw new Error("That SVG is too large to process.");
+      if (source.length > 250_000)
+        throw new Error("That SVG is too large to process.");
       setSvg(source);
       const { doc, height: sourceHeight } = svgMetrics(source);
       const nativeRadius = Number.parseFloat(
-        doc.querySelector("clipPath rect[rx], svg > rect[rx]")?.getAttribute("rx") || "0",
+        doc
+          .querySelector("clipPath rect[rx], svg > rect[rx]")
+          ?.getAttribute("rx") || "0",
       );
       setParams((current) => ({
         ...current,
@@ -992,9 +1169,12 @@ export function BadgeWorkshop() {
       }));
       setStatus("Ready");
     } catch (error) {
-      const message = error instanceof DOMException && error.name === "AbortError"
-        ? "The badge request timed out. Try again."
-        : error instanceof Error ? error.message : "Conversion failed. Check the URL.";
+      const message =
+        error instanceof DOMException && error.name === "AbortError"
+          ? "The badge request timed out. Try again."
+          : error instanceof Error
+            ? error.message
+            : "Conversion failed. Check the URL.";
       setLoadError(message);
       setStatus(message);
     } finally {
@@ -1009,13 +1189,15 @@ export function BadgeWorkshop() {
   };
 
   const updateParam = (key: AdjustableModelParam, value: number) => {
-    setParams((current) => key === "height"
-      ? {
-          ...current,
-          height: value,
-          radius: current.radius * (value / current.height),
-        }
-      : { ...current, [key]: value });
+    setParams((current) =>
+      key === "height"
+        ? {
+            ...current,
+            height: value,
+            radius: current.radius * (value / current.height),
+          }
+        : { ...current, [key]: value },
+    );
   };
 
   const resetParams = () => {
@@ -1027,10 +1209,13 @@ export function BadgeWorkshop() {
     }));
   };
 
-  const onModelReady = useCallback((group: THREE.Group, nextStats: ModelStats) => {
-    modelRef.current = group;
-    setStats(nextStats);
-  }, []);
+  const onModelReady = useCallback(
+    (group: THREE.Group, nextStats: ModelStats) => {
+      modelRef.current = group;
+      setStats(nextStats);
+    },
+    [],
+  );
 
   const getExportParts = () => {
     const model = modelRef.current;
@@ -1051,7 +1236,10 @@ export function BadgeWorkshop() {
     const exported = getExportParts();
     if (!exported) return;
     const data = create3mf(exported.parts);
-    downloadBlob(new Blob([data], { type: "model/3mf" }), "badge3d-multicolor.3mf");
+    downloadBlob(
+      new Blob([data], { type: "model/3mf" }),
+      "badge3d-multicolor.3mf",
+    );
   };
 
   const downloadColorStls = () => {
@@ -1061,11 +1249,9 @@ export function BadgeWorkshop() {
     exported.parts.forEach((part, index) => {
       const group = partAsGroup(part);
       const data = new STLExporter().parse(group, { binary: true });
-      files[`color-${String(index + 1).padStart(2, "0")}-${part.color.slice(1).toLowerCase()}.stl`] = new Uint8Array(
-        data.buffer,
-        data.byteOffset,
-        data.byteLength,
-      );
+      files[
+        `color-${String(index + 1).padStart(2, "0")}-${part.color.slice(1).toLowerCase()}.stl`
+      ] = new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
       group.traverse((node) => {
         if (node instanceof THREE.Mesh) node.geometry.dispose();
       });
@@ -1074,7 +1260,10 @@ export function BadgeWorkshop() {
       "Badge3D multicolor STL package\n\nImport every STL at the same time and keep their original coordinates.\nCombine them as parts of one object, then assign each part to the matching filament or extruder.\nThe hexadecimal color in each filename records the source badge color.\n",
     );
     const data = zipSync(files, { level: 6 });
-    downloadBlob(new Blob([data], { type: "application/zip" }), "badge3d-color-stls.zip");
+    downloadBlob(
+      new Blob([data], { type: "application/zip" }),
+      "badge3d-color-stls.zip",
+    );
   };
 
   return (
@@ -1082,9 +1271,11 @@ export function BadgeWorkshop() {
       <header className="workspace-header">
         <div className="wordmark">
           <img className="brand-logo" src="/badge3d.webp" alt="" />
-          <h1>Badge<b>3D</b></h1>
+          <h1>
+            Badge<b>3D</b>
+          </h1>
         </div>
-        <p>Turn a Shields badge into a model you can print.</p>
+        <p>Turn a Shields.io badge into a model you can print.</p>
         <div className="header-actions">
           <div className="theme-switcher" role="group" aria-label="Color theme">
             <button
@@ -1125,10 +1316,20 @@ export function BadgeWorkshop() {
             rel="noreferrer"
             aria-label="View Badge3D on GitHub"
           >
-            <GitFork aria-hidden="true" size={15} strokeWidth={1.75} />
+            <svg
+              aria-hidden="true"
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />
+            </svg>
             <span>GITHUB</span>
           </a>
-          <span className="header-meta"><i /> SVG → SOLID</span>
+          <span className="header-meta">
+            <i /> SVG → SOLID
+          </span>
         </div>
       </header>
 
@@ -1137,9 +1338,12 @@ export function BadgeWorkshop() {
           <div className="source-intro">
             <div className="panel-heading">
               <span className="panel-number">01</span>
-              <div><small>Badge source</small><h2>Choose your badge</h2></div>
+              <div>
+                <small>Badge source</small>
+                <h2>Choose your badge</h2>
+              </div>
             </div>
-            <p>Paste any secure shields.io URL or start with an example.</p>
+            <p>Paste any secure Shields.io URL or start with an example.</p>
           </div>
           <div className="source-controls">
             <form onSubmit={convert}>
@@ -1153,7 +1357,11 @@ export function BadgeWorkshop() {
                   placeholder="https://img.shields.io/badge/..."
                   required
                 />
-                <button className="primary-button" type="submit" disabled={loading}>
+                <button
+                  className="primary-button"
+                  type="submit"
+                  disabled={loading}
+                >
                   <span>{loading ? "BUILDING…" : "BUILD MODEL"}</span>
                   <ArrowRight aria-hidden="true" size={14} strokeWidth={1.75} />
                 </button>
@@ -1181,70 +1389,175 @@ export function BadgeWorkshop() {
         <div className="preview-panel panel">
           <div className="panel-heading preview-heading">
             <span className="panel-number">02</span>
-            <div><small>Interactive viewport</small><h2>Inspect the model</h2></div>
-            <span className={loadError ? "model-status error" : "model-status ready-dot"}>{status}</span>
+            <div>
+              <small>Interactive viewport</small>
+              <h2>Inspect the model</h2>
+            </div>
+            <span
+              className={
+                loadError ? "model-status error" : "model-status ready-dot"
+              }
+            >
+              {status}
+            </span>
           </div>
           <div className="preview-stage">
-            {svg
-              ? <BadgePreview svg={svg} params={params} autoRotate={autoRotate} resetToken={resetToken} onReady={onModelReady} />
-              : loading
-                ? <div className="preview-loading">PREPARING MODEL…</div>
-                : <div className="preview-loading preview-error"><b>MODEL COULD NOT BE BUILT</b><span>{loadError || "Try another shields.io URL."}</span></div>}
+            {svg ? (
+              <BadgePreview
+                svg={svg}
+                params={params}
+                autoRotate={autoRotate}
+                resetToken={resetToken}
+                onReady={onModelReady}
+              />
+            ) : loading ? (
+              <div className="preview-loading">PREPARING MODEL…</div>
+            ) : (
+              <div className="preview-loading preview-error">
+                <b>MODEL COULD NOT BE BUILT</b>
+                <span>{loadError || "Try another Shields.io URL."}</span>
+              </div>
+            )}
             <div className="view-tools">
-              <button type="button" className={autoRotate ? "selected" : ""} onClick={() => setAutoRotate((value) => !value)}>⟳ <span>Auto rotate</span></button>
-              <button type="button" onClick={() => setResetToken((value) => value + 1)}>⌖ <span>Reset view</span></button>
+              <button
+                type="button"
+                className={autoRotate ? "selected" : ""}
+                onClick={() => setAutoRotate((value) => !value)}
+              >
+                ⟳ <span>Auto rotate</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setResetToken((value) => value + 1)}
+              >
+                ⌖ <span>Reset view</span>
+              </button>
             </div>
-            <div className="canvas-hint">DRAG TO ROTATE · SPACE + DRAG TO PAN · SCROLL TO ZOOM</div>
+            <div className="canvas-hint">
+              DRAG TO ROTATE · SPACE + DRAG TO PAN · SCROLL TO ZOOM
+            </div>
           </div>
           <div className="model-stats">
-            <span><small>SIZE</small><b>{stats.width.toFixed(0)} × {stats.height.toFixed(1)} × {stats.depth.toFixed(1)} mm</b></span>
-            <span><small>MESH</small><b>{stats.triangles.toLocaleString()} △</b></span>
-            <span><small>STATUS</small><b className="watertight">● PRINTABLE</b></span>
+            <span>
+              <small>SIZE</small>
+              <b>
+                {stats.width.toFixed(0)} × {stats.height.toFixed(1)} ×{" "}
+                {stats.depth.toFixed(1)} mm
+              </b>
+            </span>
+            <span>
+              <small>MESH</small>
+              <b>{stats.triangles.toLocaleString()} △</b>
+            </span>
+            <span>
+              <small>STATUS</small>
+              <b className="watertight">● PRINTABLE</b>
+            </span>
           </div>
         </div>
 
         <div className="settings-panel panel">
           <div className="panel-heading">
             <span className="panel-number">03</span>
-            <div><small>Print dimensions</small><h2>Tune the model</h2></div>
-            <button className="settings-reset" type="button" onClick={resetParams}>
+            <div>
+              <small>Print dimensions</small>
+              <h2>Tune the model</h2>
+            </div>
+            <button
+              className="settings-reset"
+              type="button"
+              onClick={resetParams}
+            >
               <RotateCcw aria-hidden="true" size={12} strokeWidth={1.75} />
               <span>RESET</span>
             </button>
           </div>
           <div className="settings-controls">
-            <RangeControl label="Model height" value={params.height} min={8} max={30} step={0.1} unit="mm" onChange={(v) => updateParam("height", v)} />
-            <RangeControl label="Base thickness" value={params.baseHeight} min={1.2} max={5} step={0.1} unit="mm" onChange={(v) => updateParam("baseHeight", v)} />
-            <RangeControl label="Letter relief" value={params.relief} min={0.3} max={2} step={0.1} unit="mm" onChange={(v) => updateParam("relief", v)} />
+            <RangeControl
+              label="Model height"
+              value={params.height}
+              min={8}
+              max={30}
+              step={0.1}
+              unit="mm"
+              onChange={(v) => updateParam("height", v)}
+            />
+            <RangeControl
+              label="Base thickness"
+              value={params.baseHeight}
+              min={1.2}
+              max={5}
+              step={0.1}
+              unit="mm"
+              onChange={(v) => updateParam("baseHeight", v)}
+            />
+            <RangeControl
+              label="Letter relief"
+              value={params.relief}
+              min={0.3}
+              max={2}
+              step={0.1}
+              unit="mm"
+              onChange={(v) => updateParam("relief", v)}
+            />
           </div>
           <div className="print-note">
             <span aria-hidden="true">i</span>
-            <p><b>PRINT TIP</b>0.2 mm layers · 15% infill · no supports</p>
+            <p>
+              <b>PRINT TIP</b>0.2 mm layers · 15% infill · no supports
+            </p>
           </div>
         </div>
 
         <div className="export-panel panel">
           <div className="panel-heading">
             <span className="panel-number">04</span>
-            <div><small>Ready for your slicer</small><h2>Export the model</h2></div>
-          </div>
-          <div className="export-actions">
-            <button className="download-button" type="button" onClick={download3mf}>
-              <span>↓</span><b>DOWNLOAD 3MF</b><small>MULTICOLOR PARTS + MATERIAL DATA</small>
-            </button>
-            <div className="export-secondary">
-              <button type="button" onClick={downloadStl}><b>SINGLE-COLOR STL</b><small>UNIVERSAL COMPATIBILITY</small></button>
-              <button type="button" onClick={downloadColorStls}><b>COLOR STL ZIP</b><small>SEPARATE ALIGNED PARTS</small></button>
+            <div>
+              <small>Ready for your slicer</small>
+              <h2>Export the model</h2>
             </div>
           </div>
-          <p className="export-note">3MF keeps source colors. STL works with every slicer.</p>
+          <div className="export-actions">
+            <button
+              className="download-button"
+              type="button"
+              onClick={download3mf}
+            >
+              <span>↓</span>
+              <b>DOWNLOAD 3MF</b>
+              <small>MULTICOLOR PARTS + MATERIAL DATA</small>
+            </button>
+            <div className="export-secondary">
+              <button type="button" onClick={downloadStl}>
+                <b>SINGLE-COLOR STL</b>
+                <small>UNIVERSAL COMPATIBILITY</small>
+              </button>
+              <button type="button" onClick={downloadColorStls}>
+                <b>COLOR STL ZIP</b>
+                <small>SEPARATE ALIGNED PARTS</small>
+              </button>
+            </div>
+          </div>
+          <p className="export-note">
+            3MF keeps source colors. STL works with every slicer.
+          </p>
         </div>
       </section>
 
       <footer className="author-footer">
-        Crafted with <span className="footer-heart" aria-label="love">♥</span> by{" "}
-        <a href="https://github.com/LitoMore" target="_blank" rel="noreferrer">LitoMore</a>, a member of the{" "}
-        <a href="https://shields.io" target="_blank" rel="noreferrer">Shields.io</a> team.
+        Crafted with{" "}
+        <span className="footer-heart" aria-label="love">
+          ♥
+        </span>{" "}
+        by{" "}
+        <a href="https://github.com/LitoMore" target="_blank" rel="noreferrer">
+          LitoMore
+        </a>
+        , a member of the{" "}
+        <a href="https://shields.io" target="_blank" rel="noreferrer">
+          Shields.io
+        </a>{" "}
+        team.
       </footer>
     </main>
   );
