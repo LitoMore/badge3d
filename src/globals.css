@@ -92,25 +92,25 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid 
   gap: 24px;
 }
 .wordmark { display: flex; align-items: center; gap: 11px; }
-.wordmark h1 { margin: 0; font-size: 18px; line-height: 1; letter-spacing: -.04em; }
+.wordmark h1 { margin: 0; font-size: 20px; line-height: 1; letter-spacing: -.04em; }
 .wordmark h1 b { color: var(--signal-deep); }
 .brand-logo { display: block; width: 32px; height: 32px; }
-.workspace-header p { margin: 0; color: var(--muted); font-size: 11px; }
+.workspace-header p { margin: 0; color: var(--muted); font-size: 13px; }
 .header-actions { display: flex; align-items: center; gap: 14px; margin-left: auto; }
 .theme-switcher { display: inline-flex; border: 1px solid var(--line); }
 .theme-switcher button {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  height: 28px;
-  padding: 0 7px;
+  gap: 6px;
+  height: 32px;
+  padding: 0 10px;
   border: 0;
   border-right: 1px solid var(--line);
   background: transparent;
   color: var(--muted);
   cursor: pointer;
-  font: 7px var(--font-geist-mono), monospace;
-  letter-spacing: .04em;
+  font: 11px var(--font-geist-mono), monospace;
+  letter-spacing: .02em;
 }
 .theme-switcher button:last-child { border-right: 0; }
 .theme-switcher button:hover { color: var(--signal-deep); }
@@ -120,11 +120,11 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid 
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 8px;
+  padding: 7px 9px;
   border: 1px solid transparent;
   color: var(--muted);
-  font: 8px var(--font-geist-mono), monospace;
-  letter-spacing: .1em;
+  font: 11px var(--font-geist-mono), monospace;
+  letter-spacing: .08em;
   text-decoration: none;
 }
 .github-link:hover { border-color: var(--line); color: var(--signal-deep); }
@@ -134,8 +134,8 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid 
   align-items: center;
   gap: 8px;
   color: var(--muted);
-  font: 9px var(--font-geist-mono), monospace;
-  letter-spacing: .12em;
+  font: 11px var(--font-geist-mono), monospace;
+  letter-spacing: .08em;
 }
 .header-meta i { width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px rgba(51, 200, 127, .65); }
 
@@ -161,20 +161,20 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid 
   display: grid;
   flex: 0 0 auto;
   place-items: center;
-  width: 28px;
-  height: 25px;
+  width: 30px;
+  height: 27px;
   background: var(--strong-surface);
   color: var(--signal);
-  font: 9px var(--font-geist-mono), monospace;
+  font: 11px var(--font-geist-mono), monospace;
 }
 .panel-heading div { display: grid; gap: 2px; }
 .panel-heading small {
   color: var(--muted);
-  font: 8px var(--font-geist-mono), monospace;
-  letter-spacing: .12em;
+  font: 11px var(--font-geist-mono), monospace;
+  letter-spacing: .1em;
   text-transform: uppercase;
 }
-.panel-heading h2 { margin: 0; font-size: 15px; line-height: 1.2; letter-spacing: -.02em; }
+.panel-heading h2 { margin: 0; font-size: 17px; line-height: 1.2; letter-spacing: -.02em; }
 
 .input-panel {
   display: grid;
@@ -184,14 +184,14 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid 
   padding: 22px 26px;
 }
 .source-intro { display: grid; gap: 10px; }
-.source-intro p { max-width: 300px; margin: 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
+.source-intro p { max-width: 320px; margin: 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
 .source-controls { min-width: 0; }
 form label {
   display: block;
   margin-bottom: 7px;
   color: var(--muted);
-  font: 8px var(--font-geist-mono), monospace;
-  letter-spacing: .12em;
+  font: 11px var(--font-geist-mono), monospace;
+  letter-spacing: .1em;
 }
 .url-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; }
 .url-row input {
@@ -203,7 +203,7 @@ form label {
   outline: 0;
   background: var(--paper-bright);
   color: var(--ink);
-  font: 11px var(--font-geist-mono), monospace;
+  font: 13px var(--font-geist-mono), monospace;
 }
 .url-row input:focus { box-shadow: inset 0 0 0 2px var(--signal); }
 .primary-button {
@@ -216,7 +216,7 @@ form label {
   border: 1px solid var(--line-strong);
   background: var(--signal);
   color: var(--on-signal);
-  font: 700 9px var(--font-geist-mono), monospace;
+  font: 700 11px var(--font-geist-mono), monospace;
   letter-spacing: .05em;
   cursor: pointer;
 }
@@ -225,15 +225,15 @@ form label {
 .primary-button:hover { background: #ffb341; }
 .primary-button:disabled { opacity: .6; cursor: wait; }
 .examples { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
-.examples > span { margin-right: 3px; color: var(--muted); font: 7px var(--font-geist-mono), monospace; letter-spacing: .12em; }
+.examples > span { margin-right: 3px; color: var(--muted); font: 10px var(--font-geist-mono), monospace; letter-spacing: .1em; }
 .examples button {
-  padding: 4px 8px;
+  padding: 5px 9px;
   border: 1px solid var(--line);
   background: transparent;
   color: var(--muted);
   cursor: pointer;
-  font: 7px var(--font-geist-mono), monospace;
-  letter-spacing: .08em;
+  font: 10px var(--font-geist-mono), monospace;
+  letter-spacing: .06em;
 }
 .examples button:hover, .examples button.selected { border-color: var(--signal-deep); color: var(--signal-deep); background: rgba(255, 159, 28, .07); }
 
@@ -248,7 +248,7 @@ form label {
   color: #aaa9a2;
   white-space: nowrap;
   text-overflow: ellipsis;
-  font: 8px var(--font-geist-mono), monospace;
+  font: 11px var(--font-geist-mono), monospace;
   letter-spacing: .08em;
   text-transform: uppercase;
 }
@@ -289,22 +289,22 @@ form label {
 .preview-canvas canvas:active { cursor: grabbing; }
 .preview-canvas canvas:focus { outline: 0; }
 .preview-canvas canvas.space-panning { cursor: move; }
-.preview-loading { display: grid; place-items: center; height: 100%; color: #888a81; font: 9px var(--font-geist-mono), monospace; letter-spacing: .16em; }
+.preview-loading { display: grid; place-items: center; height: 100%; color: #888a81; font: 11px var(--font-geist-mono), monospace; letter-spacing: .16em; }
 .preview-error { align-content: center; gap: 10px; padding: 28px; text-align: center; letter-spacing: .08em; }
-.preview-error b { color: #e4b56d; font-size: 10px; }
-.preview-error span { max-width: 360px; color: #a9aaa3; font: 8px/1.6 var(--font-geist-mono), monospace; letter-spacing: .04em; }
+.preview-error b { color: #e4b56d; font-size: 12px; }
+.preview-error span { max-width: 360px; color: #a9aaa3; font: 11px/1.6 var(--font-geist-mono), monospace; letter-spacing: .04em; }
 .view-tools { position: absolute; z-index: 3; right: 14px; top: 14px; display: flex; gap: 6px; }
 .view-tools button {
   display: flex;
   align-items: center;
   gap: 6px;
-  height: 30px;
-  padding: 0 9px;
+  height: 32px;
+  padding: 0 10px;
   border: 1px solid #4a4c46;
   background: rgba(25, 26, 24, .86);
   color: #a7a89f;
   cursor: pointer;
-  font: 8px var(--font-geist-mono), monospace;
+  font: 11px var(--font-geist-mono), monospace;
 }
 .view-tools button:hover, .view-tools button.selected { color: var(--signal); border-color: #7c6743; }
 .canvas-hint {
@@ -312,21 +312,21 @@ form label {
   z-index: 3;
   left: 50%;
   bottom: 14px;
-  padding: 5px 8px;
+  padding: 6px 9px;
   transform: translateX(-50%);
   background: rgba(25, 26, 24, .68);
   color: #777971;
   white-space: nowrap;
   pointer-events: none;
-  font: 7px var(--font-geist-mono), monospace;
-  letter-spacing: .1em;
+  font: 10px var(--font-geist-mono), monospace;
+  letter-spacing: .08em;
 }
 .model-stats { display: grid; grid-template-columns: 1.35fr .8fr .8fr; margin: 0 20px 20px; border: 1px solid #3a3c37; border-top: 0; }
 .model-stats span { min-width: 0; padding: 11px 13px; border-right: 1px solid #3a3c37; }
 .model-stats span:last-child { border: 0; }
 .model-stats small, .model-stats b { display: block; }
-.model-stats small { margin-bottom: 4px; color: #74766f; font: 7px var(--font-geist-mono), monospace; }
-.model-stats b { overflow: hidden; color: #d4d3cc; white-space: nowrap; text-overflow: ellipsis; font: 9px var(--font-geist-mono), monospace; }
+.model-stats small { margin-bottom: 4px; color: #74766f; font: 10px var(--font-geist-mono), monospace; }
+.model-stats b { overflow: hidden; color: #d4d3cc; white-space: nowrap; text-overflow: ellipsis; font: 11px var(--font-geist-mono), monospace; }
 .model-stats .watertight { color: var(--green); }
 
 .settings-panel { padding: 22px 24px 20px; }
@@ -335,23 +335,23 @@ form label {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  height: 28px;
+  height: 30px;
   margin-left: auto;
   padding: 0 8px;
   border: 1px solid var(--line);
   background: transparent;
   color: var(--muted);
   cursor: pointer;
-  font: 7px var(--font-geist-mono), monospace;
-  letter-spacing: .08em;
+  font: 10px var(--font-geist-mono), monospace;
+  letter-spacing: .06em;
 }
 .settings-reset:hover { border-color: var(--signal-deep); color: var(--signal-deep); }
 .settings-reset svg { flex: 0 0 auto; }
 .settings-controls { border-top: 1px solid var(--line); }
 .range-control { display: block; padding: 10px 0 12px; border-bottom: 1px solid var(--line); }
 .range-control > span { display: flex; align-items: baseline; justify-content: space-between; }
-.range-control b { font-size: 11px; font-weight: 600; }
-.range-control output { min-width: 62px; padding: 3px 6px; background: var(--paper-2); font: 9px var(--font-geist-mono), monospace; text-align: right; }
+.range-control b { font-size: 13px; font-weight: 600; }
+.range-control output { min-width: 62px; padding: 3px 6px; background: var(--paper-2); font: 11px var(--font-geist-mono), monospace; text-align: right; }
 .range-control input { width: 100%; height: 14px; margin: 10px 0 0; appearance: none; background: transparent; cursor: pointer; }
 .range-control input::-webkit-slider-runnable-track { height: 3px; background: linear-gradient(90deg, var(--signal-deep) 0 var(--range), var(--range-track) var(--range) 100%); }
 .range-control input::-webkit-slider-thumb { appearance: none; width: 13px; height: 13px; margin-top: -5px; border: 2px solid var(--paper); outline: 1px solid var(--line-strong); background: var(--ink); border-radius: 50%; }
@@ -360,7 +360,7 @@ form label {
 .range-control input::-moz-range-thumb { width: 9px; height: 9px; border: 2px solid var(--paper); outline: 1px solid var(--line-strong); background: var(--ink); border-radius: 50%; }
 .print-note { display: flex; align-items: center; gap: 10px; margin-top: 15px; padding: 10px 11px; background: var(--paper-2); }
 .print-note > span { display: grid; flex: 0 0 auto; place-items: center; width: 20px; height: 20px; border: 1px solid var(--line-strong); border-radius: 50%; font: italic 11px Georgia, serif; }
-.print-note p { margin: 0; color: var(--muted); font: 8px/1.5 var(--font-geist-mono), monospace; text-transform: uppercase; }
+.print-note p { margin: 0; color: var(--muted); font: 11px/1.55 var(--font-geist-mono), monospace; text-transform: uppercase; }
 .print-note p b { display: block; color: var(--ink); letter-spacing: .08em; }
 
 .export-panel { padding: 20px 24px; background: var(--paper-bright); }
@@ -382,21 +382,21 @@ form label {
 .download-button:hover { background: #ffb341; }
 .download-button:disabled { opacity: .45; cursor: default; }
 .download-button > span { grid-row: 1 / 3; display: grid; place-items: center; width: 30px; height: 30px; border: 1px solid var(--on-signal); border-radius: 50%; font-size: 17px; }
-.download-button b { align-self: end; font-size: 12px; letter-spacing: .02em; }
-.download-button small { grid-column: 2; align-self: start; font: 7px var(--font-geist-mono), monospace; letter-spacing: .04em; opacity: .65; }
+.download-button b { align-self: end; font-size: 14px; letter-spacing: .02em; }
+.download-button small { grid-column: 2; align-self: start; font: 10px var(--font-geist-mono), monospace; letter-spacing: .03em; opacity: .7; }
 .export-secondary { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px; }
-.export-secondary button { display: grid; gap: 3px; min-height: 47px; padding: 8px 9px; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; text-align: left; }
+.export-secondary button { display: grid; gap: 4px; min-height: 52px; padding: 9px 10px; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; text-align: left; }
 .export-secondary button:hover { border-color: var(--signal-deep); color: var(--signal-deep); }
-.export-secondary b { font-size: 8px; letter-spacing: .02em; }
-.export-secondary small { color: var(--muted); font: 6px var(--font-geist-mono), monospace; letter-spacing: .04em; }
-.export-note { margin: 10px 0 0; color: var(--muted); font: 7px/1.5 var(--font-geist-mono), monospace; }
+.export-secondary b { font-size: 11px; letter-spacing: .02em; }
+.export-secondary small { color: var(--muted); font: 10px var(--font-geist-mono), monospace; letter-spacing: .03em; }
+.export-note { margin: 11px 0 0; color: var(--muted); font: 11px/1.6 var(--font-geist-mono), monospace; }
 
 .author-footer {
   max-width: 1440px;
-  margin: 20px auto 0;
+  margin: 22px auto 0;
   color: var(--muted);
-  font: 8px/1.6 var(--font-geist-mono), monospace;
-  letter-spacing: .05em;
+  font: 12px/1.7 var(--font-geist-mono), monospace;
+  letter-spacing: .03em;
   text-align: center;
 }
 .author-footer a { color: var(--ink); text-underline-offset: 3px; }
@@ -420,10 +420,10 @@ form label {
 @media (max-width: 620px) {
   .app-shell { padding: 10px 8px 18px; }
   .workspace-header { min-height: 40px; margin-bottom: 8px; padding: 0 3px; }
-  .workspace-header h1 { font-size: 17px; }
-  .header-meta { font-size: 7px; }
+  .workspace-header h1 { font-size: 19px; }
+  .header-meta { font-size: 10px; }
   .header-actions { gap: 8px; }
-  .theme-switcher button { width: 29px; justify-content: center; padding: 0; }
+  .theme-switcher button { width: 34px; justify-content: center; padding: 0; }
   .theme-switcher button span { display: none; }
   .input-panel { grid-template-columns: 1fr; gap: 16px; padding: 19px 17px; }
   .source-intro p { max-width: none; }
