@@ -1,8 +1,10 @@
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import {
   ArrowRight,
+  Focus,
   Monitor,
   Moon,
+  Rotate3d,
   RotateCcw,
   Sun,
 } from "lucide-react";
@@ -1572,15 +1574,18 @@ export function BadgeWorkshop() {
               <button
                 type="button"
                 className={autoRotate ? "selected" : ""}
+                aria-pressed={autoRotate}
                 onClick={() => setAutoRotate((value) => !value)}
               >
-                ⟳ <span>Auto rotate</span>
+                <Rotate3d aria-hidden="true" />
+                <span>Auto rotate</span>
               </button>
               <button
                 type="button"
                 onClick={() => setResetToken((value) => value + 1)}
               >
-                ⌖ <span>Reset view</span>
+                <Focus aria-hidden="true" />
+                <span>Reset view</span>
               </button>
             </div>
             <div className="canvas-hint">

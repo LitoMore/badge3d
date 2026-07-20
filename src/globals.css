@@ -296,6 +296,7 @@ form label {
   cursor: pointer;
   font: 11px var(--font-geist-mono), monospace;
 }
+.view-tools button svg { flex: 0 0 auto; width: 16px; height: 16px; stroke-width: 1.75; }
 .view-tools button:hover, .view-tools button.selected { color: var(--signal); border-color: #7c6743; }
 .canvas-hint {
   position: absolute;
