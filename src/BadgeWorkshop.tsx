@@ -61,13 +61,11 @@ type PreviewView = {
 
 type PreviewResetAnimation = {
   startedAt: number;
-  duration: number;
-  fromTarget: THREE.Vector3;
+  lastFrameAt: number;
+  maxDuration: number;
   toTarget: THREE.Vector3;
-  fromOrbit: THREE.Spherical;
+  currentOrbit: THREE.Spherical;
   toOrbit: THREE.Spherical;
-  thetaDelta: number;
-  fromZoom: number;
   toZoom: number;
 };
 
@@ -967,44 +965,80 @@ function BadgePreview({
       frame = requestAnimationFrame(animate);
       const resetAnimation = resetAnimationRef.current;
       if (resetAnimation) {
-        const progress = Math.min(
-          (time - resetAnimation.startedAt) / resetAnimation.duration,
-          1,
+        const deltaTime = Math.min(
+          Math.max((time - resetAnimation.lastFrameAt) / 1000, 0),
+          0.1,
         );
-        const eased = (1 - Math.cos(Math.PI * progress)) / 2;
-        const radius = Math.exp(
+        resetAnimation.lastFrameAt = time;
+
+        // Match OrbitControls' exponential damping at 60 fps while keeping the
+        // reset motion consistent on high-refresh-rate displays. The reset gets
+        // a slightly stronger initial response while retaining the same tail.
+        const resetDampingSpeed = 1.6;
+        const damping =
+          1 -
+          Math.pow(
+            1 - THREE.MathUtils.clamp(controls.dampingFactor, 0.01, 0.99),
+            deltaTime * 60 * resetDampingSpeed,
+          );
+        resetAnimation.currentOrbit.radius = Math.exp(
           THREE.MathUtils.lerp(
-            Math.log(resetAnimation.fromOrbit.radius),
+            Math.log(resetAnimation.currentOrbit.radius),
             Math.log(resetAnimation.toOrbit.radius),
-            eased,
+            damping,
           ),
         );
-        resetOrbit.set(
-          radius,
-          THREE.MathUtils.lerp(
-            resetAnimation.fromOrbit.phi,
-            resetAnimation.toOrbit.phi,
-            eased,
-          ),
-          resetAnimation.fromOrbit.theta + resetAnimation.thetaDelta * eased,
+        resetAnimation.currentOrbit.phi = THREE.MathUtils.lerp(
+          resetAnimation.currentOrbit.phi,
+          resetAnimation.toOrbit.phi,
+          damping,
         );
-        controls.target.lerpVectors(
-          resetAnimation.fromTarget,
-          resetAnimation.toTarget,
-          eased,
+        resetAnimation.currentOrbit.theta = THREE.MathUtils.lerp(
+          resetAnimation.currentOrbit.theta,
+          resetAnimation.toOrbit.theta,
+          damping,
         );
+        resetOrbit.copy(resetAnimation.currentOrbit);
+        controls.target.lerp(resetAnimation.toTarget, damping);
         camera.position
           .copy(resetOffset.setFromSpherical(resetOrbit))
           .add(controls.target);
         camera.zoom = THREE.MathUtils.lerp(
-          resetAnimation.fromZoom,
+          camera.zoom,
           resetAnimation.toZoom,
-          eased,
+          damping,
         );
         camera.updateProjectionMatrix();
         camera.lookAt(controls.target);
 
-        if (progress === 1) {
+        const orbitSettled =
+          Math.abs(
+            Math.log(
+              resetAnimation.currentOrbit.radius /
+                resetAnimation.toOrbit.radius,
+            ),
+          ) < 0.001 &&
+          Math.abs(
+            resetAnimation.currentOrbit.phi - resetAnimation.toOrbit.phi,
+          ) < 0.001 &&
+          Math.abs(
+            resetAnimation.currentOrbit.theta - resetAnimation.toOrbit.theta,
+          ) < 0.001;
+        const targetSettled =
+          controls.target.distanceToSquared(resetAnimation.toTarget) < 0.0001;
+        const zoomSettled =
+          Math.abs(camera.zoom - resetAnimation.toZoom) < 0.001;
+        const timedOut =
+          time - resetAnimation.startedAt >= resetAnimation.maxDuration;
+
+        if ((orbitSettled && targetSettled && zoomSettled) || timedOut) {
+          controls.target.copy(resetAnimation.toTarget);
+          camera.position
+            .copy(resetOffset.setFromSpherical(resetAnimation.toOrbit))
+            .add(controls.target);
+          camera.zoom = resetAnimation.toZoom;
+          camera.updateProjectionMatrix();
+          camera.lookAt(controls.target);
           resetAnimationRef.current = null;
           controls.enabled = true;
         }
@@ -1155,16 +1189,16 @@ function BadgePreview({
         toOrbit.theta - fromOrbit.theta + Math.PI,
         Math.PI * 2,
       ) - Math.PI;
+    toOrbit.theta = fromOrbit.theta + thetaDelta;
+    const startedAt = performance.now();
 
     resetAnimationRef.current = {
-      startedAt: performance.now(),
-      duration: 850,
-      fromTarget: currentView.target,
+      startedAt,
+      lastFrameAt: startedAt,
+      maxDuration: 1800,
       toTarget: homeView.target.clone(),
-      fromOrbit,
+      currentOrbit: fromOrbit,
       toOrbit,
-      thetaDelta,
-      fromZoom: currentView.zoom,
       toZoom: homeView.zoom,
     };
     controls.enabled = false;
