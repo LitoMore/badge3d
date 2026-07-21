@@ -1729,19 +1729,32 @@ export function BadgeWorkshop() {
       </section>
 
       <footer className="author-footer">
-        Crafted with{" "}
-        <span className="footer-heart" aria-label="love">
-          ♥
+        <span>
+          Crafted with{" "}
+          <span className="footer-heart" aria-label="love">
+            ♥
+          </span>{" "}
+          by{" "}
+          <a href="https://github.com/LitoMore" target="_blank" rel="noreferrer">
+            LitoMore
+          </a>
+          , a member of the{" "}
+          <a href="https://shields.io" target="_blank" rel="noreferrer">
+            Shields.io
+          </a>{" "}
+          team.
         </span>{" "}
-        by{" "}
-        <a href="https://github.com/LitoMore" target="_blank" rel="noreferrer">
-          LitoMore
-        </a>
-        , a member of the{" "}
-        <a href="https://shields.io" target="_blank" rel="noreferrer">
-          Shields.io
-        </a>{" "}
-        team.
+        <span>
+          Like badges? Check out another fun project -{" "}
+          <a
+            href="https://badge-beadgrid.litomore.me"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Badge Beadgrid
+          </a>
+          .
+        </span>
       </footer>
     </main>
   );
