@@ -62,11 +62,12 @@ type PreviewView = {
 type PreviewResetAnimation = {
   startedAt: number;
   duration: number;
+  progress: number;
   fromTarget: THREE.Vector3;
   toTarget: THREE.Vector3;
   fromOrbit: THREE.Spherical;
+  currentOrbit: THREE.Spherical;
   toOrbit: THREE.Spherical;
-  thetaDelta: number;
   fromZoom: number;
   toZoom: number;
 };
@@ -967,31 +968,49 @@ function BadgePreview({
       frame = requestAnimationFrame(animate);
       const resetAnimation = resetAnimationRef.current;
       if (resetAnimation) {
-        const progress = Math.min(
+        // Preserve OrbitControls' exponential damping response, then smoothly
+        // compress its remaining distance to zero over a finite duration.
+        const resetDampingSpeed = 1.6;
+        const elapsedProgress = THREE.MathUtils.clamp(
           (time - resetAnimation.startedAt) / resetAnimation.duration,
+          0,
           1,
         );
-        const eased = (1 - Math.cos(Math.PI * progress)) / 2;
-        const radius = Math.exp(
+        const elapsedSeconds =
+          (elapsedProgress * resetAnimation.duration) / 1000;
+        const dampingRemaining = Math.pow(
+          1 - THREE.MathUtils.clamp(controls.dampingFactor, 0.01, 0.99),
+          elapsedSeconds * 60 * resetDampingSpeed,
+        );
+        const settlingWindow = THREE.MathUtils.smootherstep(
+          elapsedProgress,
+          0,
+          1,
+        );
+        resetAnimation.progress =
+          1 - dampingRemaining * (1 - settlingWindow);
+        resetAnimation.currentOrbit.radius = Math.exp(
           THREE.MathUtils.lerp(
             Math.log(resetAnimation.fromOrbit.radius),
             Math.log(resetAnimation.toOrbit.radius),
-            eased,
+            resetAnimation.progress,
           ),
         );
-        resetOrbit.set(
-          radius,
-          THREE.MathUtils.lerp(
-            resetAnimation.fromOrbit.phi,
-            resetAnimation.toOrbit.phi,
-            eased,
-          ),
-          resetAnimation.fromOrbit.theta + resetAnimation.thetaDelta * eased,
+        resetAnimation.currentOrbit.phi = THREE.MathUtils.lerp(
+          resetAnimation.fromOrbit.phi,
+          resetAnimation.toOrbit.phi,
+          resetAnimation.progress,
         );
+        resetAnimation.currentOrbit.theta = THREE.MathUtils.lerp(
+          resetAnimation.fromOrbit.theta,
+          resetAnimation.toOrbit.theta,
+          resetAnimation.progress,
+        );
+        resetOrbit.copy(resetAnimation.currentOrbit);
         controls.target.lerpVectors(
           resetAnimation.fromTarget,
           resetAnimation.toTarget,
-          eased,
+          resetAnimation.progress,
         );
         camera.position
           .copy(resetOffset.setFromSpherical(resetOrbit))
@@ -999,12 +1018,19 @@ function BadgePreview({
         camera.zoom = THREE.MathUtils.lerp(
           resetAnimation.fromZoom,
           resetAnimation.toZoom,
-          eased,
+          resetAnimation.progress,
         );
         camera.updateProjectionMatrix();
         camera.lookAt(controls.target);
 
-        if (progress === 1) {
+        if (resetAnimation.progress >= 1) {
+          controls.target.copy(resetAnimation.toTarget);
+          camera.position
+            .copy(resetOffset.setFromSpherical(resetAnimation.toOrbit))
+            .add(controls.target);
+          camera.zoom = resetAnimation.toZoom;
+          camera.updateProjectionMatrix();
+          camera.lookAt(controls.target);
           resetAnimationRef.current = null;
           controls.enabled = true;
         }
@@ -1155,15 +1181,18 @@ function BadgePreview({
         toOrbit.theta - fromOrbit.theta + Math.PI,
         Math.PI * 2,
       ) - Math.PI;
+    toOrbit.theta = fromOrbit.theta + thetaDelta;
+    const startedAt = performance.now();
 
     resetAnimationRef.current = {
-      startedAt: performance.now(),
+      startedAt,
       duration: 850,
-      fromTarget: currentView.target,
+      progress: 0,
+      fromTarget: currentView.target.clone(),
       toTarget: homeView.target.clone(),
-      fromOrbit,
+      fromOrbit: fromOrbit.clone(),
+      currentOrbit: fromOrbit,
       toOrbit,
-      thetaDelta,
       fromZoom: currentView.zoom,
       toZoom: homeView.zoom,
     };
