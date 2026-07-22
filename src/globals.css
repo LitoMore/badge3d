@@ -147,16 +147,6 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid 
 .export-panel { grid-column: 2; grid-row: 3; }
 
 .panel-heading { display: flex; align-items: center; gap: 10px; }
-.panel-number {
-  display: grid;
-  flex: 0 0 auto;
-  place-items: center;
-  width: 30px;
-  height: 27px;
-  background: var(--strong-surface);
-  color: var(--signal);
-  font: 11px var(--font-geist-mono), monospace;
-}
 .panel-heading div { display: grid; gap: 2px; }
 .panel-heading small {
   color: var(--muted);
@@ -229,7 +219,6 @@ form label {
 
 .preview-panel { display: flex; flex-direction: column; background: var(--ink-2); color: var(--preview-text); }
 .preview-heading { min-height: 66px; padding: 16px 20px 12px; }
-.preview-heading .panel-number { background: var(--signal); color: var(--on-signal); }
 .preview-heading small { color: #84867f; }
 .preview-heading .model-status {
   max-width: 240px;

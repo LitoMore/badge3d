@@ -1518,7 +1518,6 @@ export function BadgeWorkshop() {
         <div className="input-panel panel">
           <div className="source-intro">
             <div className="panel-heading">
-              <span className="panel-number">01</span>
               <div>
                 <small>Badge source</small>
                 <h2>Choose your badge</h2>
@@ -1569,7 +1568,6 @@ export function BadgeWorkshop() {
 
         <div className="preview-panel panel">
           <div className="panel-heading preview-heading">
-            <span className="panel-number">02</span>
             <div>
               <small>Interactive viewport</small>
               <h2>Inspect the model</h2>
@@ -1642,7 +1640,6 @@ export function BadgeWorkshop() {
 
         <div className="settings-panel panel">
           <div className="panel-heading">
-            <span className="panel-number">03</span>
             <div>
               <small>Print dimensions</small>
               <h2>Tune the model</h2>
@@ -1695,7 +1692,6 @@ export function BadgeWorkshop() {
 
         <div className="export-panel panel">
           <div className="panel-heading">
-            <span className="panel-number">04</span>
             <div>
               <small>Ready for your slicer</small>
               <h2>Export the model</h2>
