@@ -1726,7 +1726,7 @@ export function BadgeWorkshop() {
 
       <footer className="author-footer">
         <span>
-          Crafted with{" "}
+          Crafted and maintained with{" "}
           <span className="footer-heart" aria-label="love">
             ♥
           </span>{" "}
