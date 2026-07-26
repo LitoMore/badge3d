@@ -1,4 +1,4 @@
-# Badge3D
+![Badge3D](./public/banner.png)
 
 Badge3D is a Vite React SPA that turns Shields.io SVG badges into
 configurable 3D-printable models. SVG parsing, 3D previewing, and 3MF/STL export
