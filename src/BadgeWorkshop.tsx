@@ -1743,7 +1743,7 @@ export function BadgeWorkshop() {
         <span>
           Like badges? Check out another fun project -{" "}
           <a
-            href="https://badge-beadgrid.litomore.me"
+            href="https://beads.shields.io"
             target="_blank"
             rel="noreferrer"
           >
