@@ -1687,6 +1687,14 @@ export function BadgeWorkshop() {
           >
             Badge Beadgrid
           </a>
+          . {"\u00b7"} 3MF export powered by{" "}
+          <a
+            href="https://www.npmjs.com/package/three-3mf-exporter"
+            target="_blank"
+            rel="noreferrer"
+          >
+            three-3mf-exporter
+          </a>
           .
         </span>
       </footer>
