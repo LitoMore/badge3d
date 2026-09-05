@@ -675,94 +675,18 @@ function xmlEscape(value: string) {
   );
 }
 
-function coordinate(value: number) {
-  if (Math.abs(value) < 0.000005) return "0";
-  return Number(value.toFixed(5)).toString();
-}
-
-function partMeshXml(part: PrintablePart) {
-  const vertices: string[] = [];
-  const triangles: string[] = [];
-  let vertexOffset = 0;
-
-  for (const source of part.meshes) {
-    const geometry = source.geometry.clone();
-    geometry.applyMatrix4(source.matrixWorld);
-    const position = geometry.getAttribute("position");
-    for (let index = 0; index < position.count; index += 1) {
-      vertices.push(
-        `<vertex x="${coordinate(position.getX(index))}" y="${coordinate(position.getY(index))}" z="${coordinate(position.getZ(index))}"/>`,
-      );
-    }
-
-    const indices = geometry.index;
-    if (indices) {
-      for (let index = 0; index < indices.count; index += 3) {
-        triangles.push(
-          `<triangle v1="${vertexOffset + indices.getX(index)}" v2="${vertexOffset + indices.getX(index + 1)}" v3="${vertexOffset + indices.getX(index + 2)}"/>`,
-        );
-      }
-    } else {
-      for (let index = 0; index < position.count; index += 3) {
-        triangles.push(
-          `<triangle v1="${vertexOffset + index}" v2="${vertexOffset + index + 1}" v3="${vertexOffset + index + 2}"/>`,
-        );
-      }
-    }
-    vertexOffset += position.count;
-    geometry.dispose();
-  }
-
-  return `<mesh><vertices>${vertices.join("")}</vertices><triangles>${triangles.join("")}</triangles></mesh>`;
-}
-
-function create3mf(parts: PrintablePart[]) {
-  const materialXml = parts
-    .map(
-      (part, index) =>
-        `<base name="Color ${index + 1} ${xmlEscape(part.color)}" displaycolor="${part.color}FF"/>`,
-    )
-    .join("");
-  const objectXml = parts
-    .map(
-      (part, index) =>
-        `<object id="${index + 2}" type="model" name="Color ${index + 1} ${xmlEscape(part.color)}" pid="1" pindex="${index}">${partMeshXml(part)}</object>`,
-    )
-    .join("");
-  const assemblyId = parts.length + 2;
-  const components = parts
-    .map((_, index) => `<component objectid="${index + 2}"/>`)
-    .join("");
-  const modelXml = `<?xml version="1.0" encoding="UTF-8"?>
-<model unit="millimeter" xml:lang="en-US" xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02">
-  <metadata name="Title">Badge3D multicolor badge</metadata>
-  <metadata name="Application">Badge3D</metadata>
-  <metadata name="Description">Aligned color parts generated from a Shields.io badge</metadata>
-  <resources>
-    <basematerials id="1">${materialXml}</basematerials>
-    ${objectXml}
-    <object id="${assemblyId}" type="model" name="Badge3D multicolor assembly"><components>${components}</components></object>
-  </resources>
-  <build><item objectid="${assemblyId}"/></build>
-</model>`;
-  const contentTypes = `<?xml version="1.0" encoding="UTF-8"?>
-<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
-  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
-  <Default Extension="model" ContentType="application/vnd.ms-package.3dmanufacturing-3dmodel+xml"/>
-</Types>`;
-  const relationships = `<?xml version="1.0" encoding="UTF-8"?>
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-  <Relationship Target="/3D/3dmodel.model" Id="rel0" Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"/>
-</Relationships>`;
-
-  return zipSync(
-    {
-      "[Content_Types].xml": strToU8(contentTypes),
-      "_rels/.rels": strToU8(relationships),
-      "3D/3dmodel.model": strToU8(modelXml),
+async function create3mf(printable: THREE.Group) {
+  // The exporter interpolates names into XML without escaping them.
+  printable.traverse((node) => {
+    node.name = xmlEscape(node.name);
+  });
+  const { exportTo3MF } = await import("three-3mf-exporter");
+  return exportTo3MF(printable, {
+    metadata: {
+      Application: "Badge3D",
+      ApplicationTitle: "Badge3D multicolor badge",
     },
-    { level: 6 },
-  );
+  });
 }
 
 function fitPreviewCamera(
@@ -1263,6 +1187,8 @@ export function BadgeWorkshop() {
   const [status, setStatus] = useState("Ready");
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState("");
+  const [exporting3mf, setExporting3mf] = useState(false);
+  const [exportError, setExportError] = useState("");
   const [params, setParams] = useState<ModelParams>({
     height: DEFAULT_MODEL_HEIGHT,
     baseHeight: DEFAULT_BASE_HEIGHT,
@@ -1416,14 +1342,22 @@ export function BadgeWorkshop() {
     downloadBlob(new Blob([data], { type: "model/stl" }), "badge3d.stl");
   };
 
-  const download3mf = () => {
-    const exported = getExportParts();
-    if (!exported) return;
-    const data = create3mf(exported.parts);
-    downloadBlob(
-      new Blob([data], { type: "model/3mf" }),
-      "badge3d-multicolor.3mf",
-    );
+  const download3mf = async () => {
+    if (exporting3mf) return;
+    const model = modelRef.current;
+    if (!model) return;
+    setExporting3mf(true);
+    setExportError("");
+    try {
+      const blob = await create3mf(printableModel(model));
+      downloadBlob(blob, "badge3d-multicolor.3mf");
+    } catch (error) {
+      setExportError(
+        error instanceof Error ? error.message : "Unable to export 3MF. Try again.",
+      );
+    } finally {
+      setExporting3mf(false);
+    }
   };
 
   const downloadColorStls = () => {
@@ -1702,10 +1636,12 @@ export function BadgeWorkshop() {
               className="download-button"
               type="button"
               onClick={download3mf}
+              disabled={exporting3mf}
+              aria-busy={exporting3mf}
             >
               <span>↓</span>
-              <b>DOWNLOAD 3MF</b>
-              <small>MULTICOLOR PARTS + MATERIAL DATA</small>
+              <b>{exporting3mf ? "EXPORTING 3MF…" : "DOWNLOAD 3MF"}</b>
+              <small>MULTICOLOR PARTS + FILAMENT COLORS</small>
             </button>
             <div className="export-secondary">
               <button type="button" onClick={downloadStl}>
@@ -1718,8 +1654,10 @@ export function BadgeWorkshop() {
               </button>
             </div>
           </div>
+          {exportError && <p role="alert">{exportError}</p>}
           <p className="export-note">
-            3MF keeps source colors. STL works with every slicer.
+            3MF includes filament colors for Bambu Studio. Review printer and
+            filament settings before slicing.
           </p>
         </div>
       </section>
