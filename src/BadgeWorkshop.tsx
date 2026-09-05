@@ -1689,7 +1689,7 @@ export function BadgeWorkshop() {
           </a>
           . {"\u00b7"} 3MF export powered by{" "}
           <a
-            href="https://www.npmjs.com/package/three-3mf-exporter"
+            href="https://github.com/LittleSound/bekuto3d/tree/main/packages/three-3mf-exporter"
             target="_blank"
             rel="noreferrer"
           >
