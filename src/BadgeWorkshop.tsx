@@ -1,6 +1,8 @@
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import {
   ArrowRight,
+  Check,
+  Link,
   Focus,
   Monitor,
   Moon,
@@ -78,6 +80,17 @@ type PrintablePart = {
 };
 
 let badgeFontPromise: Promise<opentype.Font> | undefined;
+
+function parseBadgeUrl(value: string) {
+  const target = new URL(value);
+  if (
+    target.protocol !== "https:" ||
+    !["shields.io", "img.shields.io"].includes(target.hostname)
+  ) {
+    throw new Error("Paste a secure Shields.io URL.");
+  }
+  return target;
+}
 
 function loadBadgeFont() {
   badgeFontPromise ??= fetch(fontUrl)
@@ -1183,10 +1196,20 @@ export function BadgeWorkshop() {
       return "system";
     }
   });
-  const [url, setUrl] = useState(DEFAULT_BADGE);
-  const [svg, setSvg] = useState(DEFAULT_BADGE_SVG);
-  const [status, setStatus] = useState("Ready");
-  const [loading, setLoading] = useState(false);
+  const [initialBadgeUrl] = useState(
+    () =>
+      new URLSearchParams(window.location.search).get("badgeUrl")?.trim() ||
+      DEFAULT_BADGE,
+  );
+  const [url, setUrl] = useState(initialBadgeUrl);
+  const [svg, setSvg] = useState(
+    initialBadgeUrl === DEFAULT_BADGE ? DEFAULT_BADGE_SVG : "",
+  );
+  const [shareFeedback, setShareFeedback] = useState({ url: "", message: "" });
+  const [status, setStatus] = useState(
+    initialBadgeUrl === DEFAULT_BADGE ? "Ready" : "Building model…",
+  );
+  const [loading, setLoading] = useState(initialBadgeUrl !== DEFAULT_BADGE);
   const [loadError, setLoadError] = useState("");
   const [exporting3mf, setExporting3mf] = useState(false);
   const [exportError, setExportError] = useState("");
@@ -1250,13 +1273,7 @@ export function BadgeWorkshop() {
     const controller = new AbortController();
     const timeout = window.setTimeout(() => controller.abort(), 12000);
     try {
-      const target = new URL(nextUrl);
-      if (
-        target.protocol !== "https:" ||
-        !["shields.io", "img.shields.io"].includes(target.hostname)
-      ) {
-        throw new Error("Paste a secure Shields.io URL.");
-      }
+      const target = parseBadgeUrl(nextUrl);
       const response = await fetch(target, {
         headers: { Accept: "image/svg+xml" },
         signal: controller.signal,
@@ -1293,6 +1310,45 @@ export function BadgeWorkshop() {
       setLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).has("badgeUrl")) {
+      window.history.replaceState(
+        window.history.state,
+        "",
+        window.location.pathname + window.location.hash,
+      );
+    }
+    if (initialBadgeUrl === DEFAULT_BADGE) return;
+    const timeout = window.setTimeout(() => void loadBadge(initialBadgeUrl), 0);
+    return () => window.clearTimeout(timeout);
+  }, [initialBadgeUrl, loadBadge]);
+
+  useEffect(() => {
+    if (!shareFeedback.message) return;
+    const timeout = window.setTimeout(
+      () => setShareFeedback({ url: "", message: "" }),
+      2000,
+    );
+    return () => window.clearTimeout(timeout);
+  }, [shareFeedback]);
+
+  const copyShareableLink = async () => {
+    try {
+      parseBadgeUrl(url);
+    } catch {
+      setShareFeedback({ url, message: "Enter a secure Shields.io URL to share." });
+      return;
+    }
+    const shareUrl = new URL(window.location.pathname, window.location.origin);
+    shareUrl.searchParams.set("badgeUrl", url.trim());
+    try {
+      await navigator.clipboard.writeText(shareUrl.href);
+      setShareFeedback({ url, message: "Link copied!" });
+    } catch {
+      setShareFeedback({ url, message: "Unable to copy. Please try again." });
+    }
+  };
 
   const convert = (event: FormEvent) => {
     event.preventDefault();
@@ -1482,21 +1538,47 @@ export function BadgeWorkshop() {
                 </button>
               </div>
             </form>
-            <div className="examples">
-              <span>EXAMPLES</span>
-              {EXAMPLES.map(([label, exampleUrl]) => (
+            <div className="source-actions">
+              <div className="examples">
+                <span>EXAMPLES</span>
+                {EXAMPLES.map(([label, exampleUrl]) => (
+                  <button
+                    key={label}
+                    type="button"
+                    className={url === exampleUrl ? "selected" : ""}
+                    onClick={() => {
+                      setUrl(exampleUrl);
+                      loadBadge(exampleUrl);
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <div className="share-link-row">
                 <button
-                  key={label}
                   type="button"
-                  className={url === exampleUrl ? "selected" : ""}
-                  onClick={() => {
-                    setUrl(exampleUrl);
-                    loadBadge(exampleUrl);
-                  }}
+                  onClick={copyShareableLink}
+                  disabled={!url.trim()}
                 >
-                  {label}
+                  {shareFeedback.url === url && shareFeedback.message === "Link copied!" ? (
+                    <Check aria-hidden="true" size={12} strokeWidth={1.75} />
+                  ) : (
+                    <Link aria-hidden="true" size={12} strokeWidth={1.75} />
+                  )}
+                  Copy shareable link
                 </button>
-              ))}
+              </div>
+            </div>
+            <div
+              className={
+                shareFeedback.message === "Link copied!"
+                  ? "share-feedback share-feedback-success"
+                  : "share-feedback"
+              }
+              role="status"
+            >
+              {shareFeedback.url === url ? shareFeedback.message : ""}
             </div>
           </div>
         </div>

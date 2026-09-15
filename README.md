@@ -4,6 +4,13 @@ Badge3D is a Vite React SPA that turns Shields.io SVG badges into
 configurable 3D-printable models. SVG parsing, 3D previewing, and 3MF/STL export
 run in the browser, including fetching badges directly from Shields.io.
 
+## Share a badge
+
+Click **Copy shareable link** below the URL input to share the current badge URL.
+Opening `https://3d.shields.io/?badgeUrl=<encoded Shields.io URL>` automatically
+loads the badge, then clears the query parameters from the address bar without
+reloading the page. Print dimensions use their defaults.
+
 ## Export formats
 
 - **Multicolor 3MF** - aligned color parts with Bambu Studio filament colors. Open as
