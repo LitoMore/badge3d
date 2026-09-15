@@ -12,6 +12,16 @@ run in the browser, including fetching badges directly from Shields.io.
 - Single-color STL: one universal mesh for single-material printing
 - Color STL ZIP: one aligned STL per source color for manual extruder assignment
 
+## User Showcase
+
+Here are some 3D badges printed and shared by Badge3D users on social media.
+
+<p align="center">
+  <a href="https://x.com/RizumuA3/status/2099124602186412098">
+    <img width="400" src="./media/showcase-rizumu.webp" alt="Showcase Rizumu" />
+  </a>
+</p>
+
 ## License
 
 MIT
