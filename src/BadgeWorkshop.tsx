@@ -680,10 +680,11 @@ async function create3mf(printable: THREE.Group) {
   printable.traverse((node) => {
     node.name = xmlEscape(node.name);
   });
-  const { exportTo3MF } = await import("three-3mf-exporter");
+  const { defaultPrintConfig, exportTo3MF } = await import("three-3mf-exporter");
   return exportTo3MF(printable, {
     metadata: {
-      Application: "Badge3D",
+      // Bambu Studio uses the exporter's Application marker to load filament colors.
+      ...defaultPrintConfig.metadata,
       ApplicationTitle: "Badge3D multicolor badge",
     },
   });
