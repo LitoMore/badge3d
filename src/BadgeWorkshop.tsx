@@ -9,6 +9,7 @@ import {
   Rotate3d,
   RotateCcw,
   Sun,
+  TriangleAlert,
 } from "lucide-react";
 import * as THREE from "three";
 import * as opentype from "opentype.js";
@@ -1206,6 +1207,7 @@ export function BadgeWorkshop() {
     initialBadgeUrl === DEFAULT_BADGE ? DEFAULT_BADGE_SVG : "",
   );
   const [shareFeedback, setShareFeedback] = useState({ url: "", message: "" });
+  const shareMessage = shareFeedback.url === url ? shareFeedback.message : "";
   const [status, setStatus] = useState(
     initialBadgeUrl === DEFAULT_BADGE ? "Ready" : "Building model…",
   );
@@ -1325,7 +1327,7 @@ export function BadgeWorkshop() {
   }, [initialBadgeUrl, loadBadge]);
 
   useEffect(() => {
-    if (!shareFeedback.message) return;
+    if (shareFeedback.message !== "Link copied!") return;
     const timeout = window.setTimeout(
       () => setShareFeedback({ url: "", message: "" }),
       2000,
@@ -1560,25 +1562,30 @@ export function BadgeWorkshop() {
                   type="button"
                   onClick={copyShareableLink}
                   disabled={!url.trim()}
+                  aria-describedby={shareMessage ? "share-feedback" : undefined}
                 >
-                  {shareFeedback.url === url && shareFeedback.message === "Link copied!" ? (
+                  {shareMessage === "Link copied!" ? (
                     <Check aria-hidden="true" size={12} strokeWidth={1.75} />
+                  ) : shareMessage ? (
+                    <TriangleAlert aria-hidden="true" size={12} strokeWidth={1.75} />
                   ) : (
                     <Link aria-hidden="true" size={12} strokeWidth={1.75} />
                   )}
                   Copy shareable link
                 </button>
+                {shareMessage && shareMessage !== "Link copied!" && (
+                  <div className="share-tooltip" role="tooltip">
+                    {shareMessage}
+                  </div>
+                )}
               </div>
             </div>
             <div
-              className={
-                shareFeedback.message === "Link copied!"
-                  ? "share-feedback share-feedback-success"
-                  : "share-feedback"
-              }
+              id="share-feedback"
+              className="share-feedback"
               role="status"
             >
-              {shareFeedback.url === url ? shareFeedback.message : ""}
+              {shareMessage}
             </div>
           </div>
         </div>
