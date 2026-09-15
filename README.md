@@ -6,13 +6,13 @@ run in the browser, including fetching badges directly from Shields.io.
 
 ## Export formats
 
-- Multicolor 3MF: aligned color parts with Bambu Studio filament colors. Open as
+- **Multicolor 3MF** - aligned color parts with Bambu Studio filament colors. Open as
   a project to load the exported colors; importing geometry alone uses the
   current project's filaments.
-- Single-color STL: one universal mesh for single-material printing
-- Color STL ZIP: one aligned STL per source color for manual extruder assignment
+- **Single-color STL** - one universal mesh for single-material printing
+- **Color STL ZIP** - one aligned STL per source color for manual extruder assignment
 
-## User Showcase
+## User showcase
 
 Here are some 3D badges printed and shared by Badge3D users on social media.
 
