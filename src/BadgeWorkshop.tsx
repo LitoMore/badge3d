@@ -19,16 +19,16 @@ import { STLExporter } from "three/addons/exporters/STLExporter.js";
 import { strToU8, zipSync } from "fflate";
 import fontUrl from "dejavu-fonts-ttf/ttf/DejaVuSans.ttf?url";
 
-const DEFAULT_BADGE = "https://img.shields.io/badge/build-passing-34d058";
+const DEFAULT_BADGE = "https://img.shields.io/badge/build-passing-44BB00";
 const EXAMPLES = [
   ["BUILD", DEFAULT_BADGE],
-  ["COVERAGE", "https://img.shields.io/badge/coverage-96%25-7c3aed"],
-  ["VERSION", "https://img.shields.io/badge/version-v2.4.1-2563eb"],
+  ["COVERAGE", "https://img.shields.io/badge/coverage-100%25-44BB00"],
+  ["VERSION", "https://img.shields.io/badge/version-v2.4.1-007EC6"],
 ] as const;
 const DEFAULT_MODEL_HEIGHT = 15;
 const DEFAULT_BASE_HEIGHT = 1.5;
 const DEFAULT_RELIEF = 1;
-const DEFAULT_BADGE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="88" height="20" role="img" aria-label="build: passing"><title>build: passing</title><filter id="blur"><feGaussianBlur stdDeviation="16"/></filter><linearGradient id="s" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><clipPath id="r"><rect width="88" height="20" rx="3"/></clipPath><g clip-path="url(#r)"><rect width="37" height="20" fill="#555"/><rect x="37" width="51" height="20" fill="#34d058"/><rect width="88" height="20" fill="url(#s)"/></g><g fill="#fff" text-anchor="middle" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" text-rendering="geometricPrecision" font-size="110"><g transform="scale(.1)"><g aria-hidden="true" fill="#010101"><text x="195" y="150" fill-opacity=".8" filter="url(#blur)" textLength="270">build</text><text x="195" y="150" fill-opacity=".3" textLength="270">build</text></g><text x="195" y="140" textLength="270">build</text></g><g transform="scale(.1)"><g aria-hidden="true" fill="#010101"><text x="615" y="150" fill-opacity=".8" filter="url(#blur)" textLength="410">passing</text><text x="615" y="150" fill-opacity=".3" textLength="410">passing</text></g><text x="615" y="140" textLength="410">passing</text></g></g></svg>`;
+const DEFAULT_BADGE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="88" height="20" role="img" aria-label="build: passing"><title>build: passing</title><filter id="blur"><feGaussianBlur stdDeviation="16"/></filter><linearGradient id="s" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><clipPath id="r"><rect width="88" height="20" rx="3"/></clipPath><g clip-path="url(#r)"><rect width="37" height="20" fill="#555"/><rect x="37" width="51" height="20" fill="#44BB00"/><rect width="88" height="20" fill="url(#s)"/></g><g fill="#fff" text-anchor="middle" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" text-rendering="geometricPrecision" font-size="110"><g transform="scale(.1)"><g aria-hidden="true" fill="#010101"><text x="195" y="150" fill-opacity=".8" filter="url(#blur)" textLength="270">build</text><text x="195" y="150" fill-opacity=".3" textLength="270">build</text></g><text x="195" y="140" textLength="270">build</text></g><g transform="scale(.1)"><g aria-hidden="true" fill="#010101"><text x="615" y="150" fill-opacity=".8" filter="url(#blur)" textLength="410">passing</text><text x="615" y="150" fill-opacity=".3" textLength="410">passing</text></g><text x="615" y="140" textLength="410">passing</text></g></g></svg>`;
 
 type ModelParams = {
   height: number;
