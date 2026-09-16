@@ -19,11 +19,11 @@ import { STLExporter } from "three/addons/exporters/STLExporter.js";
 import { strToU8, zipSync } from "fflate";
 import fontUrl from "dejavu-fonts-ttf/ttf/DejaVuSans.ttf?url";
 
-const DEFAULT_BADGE = "https://img.shields.io/badge/build-passing-44BB00";
+const DEFAULT_BADGE = "https://img.shields.io/badge/build-passing-brightgreen";
 const EXAMPLES = [
   ["BUILD", DEFAULT_BADGE],
-  ["COVERAGE", "https://img.shields.io/badge/coverage-100%25-44BB00"],
-  ["VERSION", "https://img.shields.io/badge/version-v2.4.1-007EC6"],
+  ["COVERAGE", "https://img.shields.io/badge/coverage-100%25-brightgreen"],
+  ["VERSION", "https://img.shields.io/badge/version-v2.4.1-blue"],
 ] as const;
 const DEFAULT_MODEL_HEIGHT = 15;
 const DEFAULT_BASE_HEIGHT = 1.5;
