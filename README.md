@@ -34,4 +34,4 @@ Here are some 3D badges printed and shared by Badge3D users on social media.
 
 ## License
 
-MI
+MIT
