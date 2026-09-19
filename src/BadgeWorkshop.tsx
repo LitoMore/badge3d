@@ -19,6 +19,8 @@ import { STLExporter } from "three/addons/exporters/STLExporter.js";
 import { strToU8, zipSync } from "fflate";
 import fontUrl from "dejavu-fonts-ttf/ttf/DejaVuSans.ttf?url";
 
+import { badgeFilenameStem } from "./badge-url";
+
 const DEFAULT_BADGE = "https://img.shields.io/badge/build-passing-brightgreen";
 const EXAMPLES = [
   ["BUILD", DEFAULT_BADGE],
@@ -1280,6 +1282,7 @@ export function BadgeWorkshop() {
       DEFAULT_BADGE,
   );
   const [url, setUrl] = useState(initialBadgeUrl);
+  const [loadedBadgeUrl, setLoadedBadgeUrl] = useState(initialBadgeUrl);
   const [svg, setSvg] = useState(
     initialBadgeUrl === DEFAULT_BADGE ? DEFAULT_BADGE_SVG : "",
   );
@@ -1364,6 +1367,7 @@ export function BadgeWorkshop() {
       if (source.length > 250_000)
         throw new Error("That SVG is too large to process.");
       setSvg(source);
+      setLoadedBadgeUrl(target.href);
       const { doc, height: sourceHeight } = svgMetrics(source);
       const nativeRadius = Number.parseFloat(
         doc
@@ -1457,36 +1461,38 @@ export function BadgeWorkshop() {
 
   const onModelReady = useCallback(
     (group: THREE.Group, nextStats: ModelStats) => {
+      group.userData.filenameStem = badgeFilenameStem(loadedBadgeUrl);
       modelRef.current = group;
       setStats(nextStats);
     },
-    [],
+    [loadedBadgeUrl],
   );
 
   const getExportParts = () => {
     const model = modelRef.current;
     if (!model) return null;
     const printable = printableModel(model);
-    return { printable, parts: printableParts(printable) };
+    return { printable, parts: printableParts(printable), filenameStem: model.userData.filenameStem as string };
   };
 
   const downloadStl = () => {
     const exported = getExportParts();
     if (!exported) return;
-    const { printable } = exported;
+    const { printable, filenameStem } = exported;
     const data = new STLExporter().parse(printable, { binary: true });
-    downloadBlob(new Blob([data], { type: "model/stl" }), "badge3d.stl");
+    downloadBlob(new Blob([data], { type: "model/stl" }), `${filenameStem}.stl`);
   };
 
   const download3mf = async () => {
     if (exporting3mf) return;
     const model = modelRef.current;
     if (!model) return;
+    const filenameStem = model.userData.filenameStem as string;
     setExporting3mf(true);
     setExportError("");
     try {
       const blob = await create3mf(printableModel(model));
-      downloadBlob(blob, "badge3d-multicolor.3mf");
+      downloadBlob(blob, `${filenameStem}-multicolor.3mf`);
     } catch (error) {
       setExportError(
         error instanceof Error ? error.message : "Unable to export 3MF. Try again.",
@@ -1504,7 +1510,7 @@ export function BadgeWorkshop() {
       const group = partAsGroup(part);
       const data = new STLExporter().parse(group, { binary: true });
       files[
-        `color-${String(index + 1).padStart(2, "0")}-${part.color.slice(1).toLowerCase()}.stl`
+        `${exported.filenameStem}-color-${String(index + 1).padStart(2, "0")}-${part.color.slice(1).toLowerCase()}.stl`
       ] = new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
       group.traverse((node) => {
         if (node instanceof THREE.Mesh) node.geometry.dispose();
@@ -1516,7 +1522,7 @@ export function BadgeWorkshop() {
     const data = zipSync(files, { level: 6 });
     downloadBlob(
       new Blob([data], { type: "application/zip" }),
-      "badge3d-color-stls.zip",
+      `${exported.filenameStem}-color-stls.zip`,
     );
   };
 
