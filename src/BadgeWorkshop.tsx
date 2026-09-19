@@ -175,7 +175,64 @@ function svgMetrics(svg: string) {
     viewBox?.[2] || Number.parseFloat(root.getAttribute("width") || "100");
   const height =
     viewBox?.[3] || Number.parseFloat(root.getAttribute("height") || "20");
-  return { doc, width, height };
+  const social = normalizeSocialBadge(doc);
+  return { doc, width, height, social };
+}
+
+function normalizeSocialBadge(doc: Document) {
+  // Social badges hide the whole text group for accessibility, but only the
+  // individually hidden text nodes are visual shadows.
+  const labelOverlay = doc.querySelector('rect[id="llink"]');
+  if (!labelOverlay) return false;
+  let ancestor = labelOverlay.parentElement;
+  while (ancestor && ancestor !== doc.documentElement) {
+    ancestor.removeAttribute("aria-hidden");
+    ancestor = ancestor.parentElement;
+  }
+  labelOverlay.remove();
+  doc.querySelectorAll("[stroke]").forEach((node) =>
+    node.setAttribute("stroke", "none"),
+  );
+  return true;
+}
+
+function socialBadgeShapes(doc: Document, width: number, height: number) {
+  const rects = Array.from(doc.querySelectorAll("svg > g > rect[fill]"))
+    .filter((node) => Number(node.getAttribute("height")) >= height * 0.95);
+  const arrow = doc.querySelector("svg > g > path[fill]");
+  const arrowPoints = arrow
+    ? new SVGLoader().parse(
+        `<svg xmlns="http://www.w3.org/2000/svg">${new XMLSerializer().serializeToString(arrow)}</svg>`,
+      ).paths[0]?.subPaths[0]?.getPoints().reverse() || []
+    : [];
+  return rects.map((rect) => {
+    const x = Number(rect.getAttribute("x"));
+    const y = Number(rect.getAttribute("y"));
+    const w = Number(rect.getAttribute("width"));
+    const h = Number(rect.getAttribute("height"));
+    const r = Math.min(Number(rect.getAttribute("rx")), w / 2, h / 2);
+    const shape = new THREE.Shape();
+    const move = (px: number, py: number) => shape.moveTo(px - width / 2, height / 2 - py);
+    const line = (px: number, py: number) => shape.lineTo(px - width / 2, height / 2 - py);
+    const curve = (cx: number, cy: number, px: number, py: number) =>
+      shape.quadraticCurveTo(cx - width / 2, height / 2 - cy, px - width / 2, height / 2 - py);
+    move(x + r, y);
+    line(x + w - r, y);
+    curve(x + w, y, x + w, y + r);
+    line(x + w, y + h - r);
+    curve(x + w, y + h, x + w - r, y + h);
+    line(x + r, y + h);
+    curve(x, y + h, x, y + h - r);
+    // Integrate the pointer into the bubble outline, so it is a single solid
+    // rather than overlapping extrusions with internal faces.
+    if (arrowPoints.length && Math.abs(arrowPoints[0].x - x) < 0.001) {
+      arrowPoints.forEach((point) => line(point.x, point.y));
+    }
+    line(x, y + r);
+    curve(x, y, x + r, y);
+    shape.closePath();
+    return { shape, fill: rect.getAttribute("fill") || "#fafafa" };
+  });
 }
 
 function imageHref(node: Element) {
@@ -392,7 +449,7 @@ function getTextOutline(font: opentype.Font, text: string, fontSize: number) {
 }
 
 function buildModel(svg: string, params: ModelParams, font: opentype.Font) {
-  const { doc, width: svgWidth, height: svgHeight } = svgMetrics(svg);
+  const { doc, width: svgWidth, height: svgHeight, social } = svgMetrics(svg);
   const mmPerUnit = params.height / svgHeight;
   const width = svgWidth * mmPerUnit;
   const height = params.height;
@@ -400,7 +457,21 @@ function buildModel(svg: string, params: ModelParams, font: opentype.Font) {
   group.name = "Printable badge";
 
   const segments = badgeSegments(doc, svgWidth, svgHeight);
-  if (segments.length) {
+  if (social) {
+    socialBadgeShapes(doc, svgWidth, svgHeight).forEach(({ shape, fill }, index) => {
+      const geometry = new THREE.ExtrudeGeometry(shape, {
+        depth: params.baseHeight, bevelEnabled: false, curveSegments: 10,
+      });
+      geometry.scale(mmPerUnit, mmPerUnit, 1);
+      const color = svgColor(fill);
+      const mesh = new THREE.Mesh(geometry, [
+        new THREE.MeshBasicMaterial({ color }),
+        new THREE.MeshStandardMaterial({ color, roughness: 0.58, metalness: 0.02 }),
+      ]);
+      mesh.name = `Badge color segment ${index + 1}: ${fill}`;
+      group.add(mesh);
+    });
+  } else if (segments.length) {
     segments.forEach((segment, index) => {
       const xMin = segment.x * mmPerUnit - width / 2;
       const xMax = (segment.x + segment.width) * mmPerUnit - width / 2;
@@ -572,7 +643,7 @@ function buildModel(svg: string, params: ModelParams, font: opentype.Font) {
 
 function createSvgTexture(svg: string) {
   return new Promise<THREE.Texture>((resolve, reject) => {
-    const doc = new DOMParser().parseFromString(svg, "image/svg+xml");
+    const { doc } = svgMetrics(svg);
     doc.querySelectorAll("image").forEach((node) => {
       if (decodeSvgDataUri(imageHref(node))) node.remove();
     });
@@ -1038,7 +1109,9 @@ function BadgePreview({
     onReady(group, stats);
 
     let active = true;
-    createSvgTexture(svg)
+    // Social bases already reproduce the SVG silhouette and solid colors.
+    // A rectangular preview overlay would cover the gap and the bubble pointer.
+    if (!svgMetrics(svg).social) createSvgTexture(svg)
       .then((texture) => {
         if (!active || rootRef.current !== group) {
           texture.dispose();
