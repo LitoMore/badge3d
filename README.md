@@ -24,14 +24,14 @@ reloading the page. Print dimensions use their defaults.
 Here are some 3D badges printed and shared by Badge3D users on social media.
 
 <p align="center">
-  <a href="https://x.com/LitoMore/status/2101221017922531528">
-    <img width="300" src="./media/showcase-litomore.webp" alt="Showcase LitoMore" />
-  </a>
   <a href="https://x.com/RizumuA3/status/2099124602186412098">
     <img width="300" src="./media/showcase-rizumu.webp" alt="Showcase Rizumu" />
+  </a>
+  <a href="https://x.com/LitoMore/status/2101221017922531528">
+    <img width="300" src="./media/showcase-litomore.webp" alt="Showcase LitoMore" />
   </a>
 </p>
 
 ## License
 
-MIT
+MI
