@@ -24,6 +24,7 @@ const EXAMPLES = [
   ["BUILD", DEFAULT_BADGE],
   ["COVERAGE", "https://img.shields.io/badge/coverage-100%25-brightgreen"],
   ["VERSION", "https://img.shields.io/badge/version-v2.4.1-blue"],
+  ["JSR", "https://jsr.io/badges/@std/path"],
 ] as const;
 const DEFAULT_MODEL_HEIGHT = 15;
 const DEFAULT_BASE_HEIGHT = 1.5;
@@ -84,9 +85,12 @@ let badgeFontPromise: Promise<opentype.Font> | undefined;
 
 function parseBadgeUrl(value: string) {
   const target = new URL(value);
+  const isShields = ["shields.io", "img.shields.io"].includes(target.hostname);
+  const isJsrBadge =
+    target.hostname === "jsr.io" && target.pathname.startsWith("/badges/");
   if (
     target.protocol !== "https:" ||
-    !["shields.io", "img.shields.io"].includes(target.hostname)
+    (!isShields && !isJsrBadge)
   ) {
     throw new Error("Paste a secure Shields.io URL.");
   }
