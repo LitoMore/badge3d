@@ -474,7 +474,7 @@ function buildModel(svg: string, params: ModelParams, font: opentype.Font) {
         new THREE.MeshBasicMaterial({ color }),
         new THREE.MeshStandardMaterial({ color, roughness: 0.58, metalness: 0.02 }),
       ]);
-      mesh.name = `Badge color segment ${index + 1}: ${fill}`;
+      mesh.name = `Badge color segment ${index + 1} - ${fill}`;
       group.add(mesh);
     });
   } else if (segments.length) {
@@ -501,7 +501,7 @@ function buildModel(svg: string, params: ModelParams, font: opentype.Font) {
           metalness: 0.02,
         }),
       ]);
-      mesh.name = `Badge color segment ${index + 1}: ${segment.fill}`;
+      mesh.name = `Badge color segment ${index + 1} - ${segment.fill}`;
       group.add(mesh);
     });
   } else {
@@ -554,7 +554,7 @@ function buildModel(svg: string, params: ModelParams, font: opentype.Font) {
           metalness: 0,
         }),
       ]);
-      mesh.name = `Raised logo: ${logoName}${parsed.paths.length > 1 ? ` (${pathIndex + 1})` : ""}`;
+      mesh.name = `Raised logo - ${logoName}${parsed.paths.length > 1 ? ` (${pathIndex + 1})` : ""}`;
       mesh.position.set(
         (image.x + image.offsetX - image.minX * image.scaleX) * mmPerUnit -
           width / 2,
@@ -617,7 +617,7 @@ function buildModel(svg: string, params: ModelParams, font: opentype.Font) {
       metalness: 0,
     });
     const mesh = new THREE.Mesh(geometry, [capMaterial, sideMaterial]);
-    mesh.name = `Raised text: ${content}`;
+    mesh.name = `Raised text - ${content}`;
     mesh.position.set(
       x * mmPerUnit - width / 2 - geometryWidth / 2 - geometryBounds.min.x,
       height / 2 - y * mmPerUnit,
@@ -766,10 +766,19 @@ function xmlEscape(value: string) {
   );
 }
 
+function printableName(value: string) {
+  // Bambu Studio rejects filename separators and control characters in part names.
+  return value
+    .replace(/[<>:"/\\|?*]+/g, " - ")
+    .replace(/\p{Cc}/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim() || "Badge part";
+}
+
 async function create3mf(printable: THREE.Group) {
   // The exporter interpolates names into XML without escaping them.
   printable.traverse((node) => {
-    node.name = xmlEscape(node.name);
+    node.name = xmlEscape(printableName(node.name));
   });
   const { defaultPrintConfig, exportTo3MF } = await import("three-3mf-exporter");
   return exportTo3MF(printable, {
