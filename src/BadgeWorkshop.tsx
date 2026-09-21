@@ -1420,7 +1420,7 @@ export function BadgeWorkshop() {
     if (shareFeedback.message !== "Link copied!") return;
     const timeout = window.setTimeout(
       () => setShareFeedback({ url: "", message: "" }),
-      2000,
+      1000,
     );
     return () => window.clearTimeout(timeout);
   }, [shareFeedback]);
@@ -1652,6 +1652,16 @@ export function BadgeWorkshop() {
               <div className="share-link-row">
                 <button
                   type="button"
+                  onMouseDown={(event) => {
+                    // Keep the source focused: blurring it can clear Safari's
+                    // user activation before the click reaches the clipboard.
+                    if (
+                      event.button === 0 &&
+                      document.activeElement?.id === "badge-url"
+                    ) {
+                      event.preventDefault();
+                    }
+                  }}
                   onClick={copyShareableLink}
                   disabled={!url.trim()}
                   aria-describedby={shareMessage ? "share-feedback" : undefined}
