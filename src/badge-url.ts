@@ -1,6 +1,4 @@
-// Static path semantics follow shields.io/core/badge-urls/static-badge-path.js
-// at 3fe73533a04cbd4bf14a44bb449dc6a97947e5e5. See shields-LICENSE-MIT.txt.
-// Linear scans preserve its matching order without regex backtracking.
+// Linear scans preserve matching order without regex backtracking.
 
 export type BadgeUrlParameters = {
 	pathname: string;
