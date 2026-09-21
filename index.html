@@ -1,61 +1,68 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="color-scheme" content="light dark" />
-    <meta name="theme-color" content="#f2eee5" />
-    <script>
-      try {
-        const theme = localStorage.getItem("badge3d-color-theme");
-        const isDark =
-          theme === "dark" ||
-          (theme !== "light" &&
-            matchMedia("(prefers-color-scheme: dark)").matches);
-        if (theme === "light" || theme === "dark")
-          document.documentElement.dataset.theme = theme;
-        document.querySelector('meta[name="theme-color"]').content = isDark
-          ? "#171816"
-          : "#f2eee5";
-      } catch {}
-    </script>
-    <meta
-      name="description"
-      content="Paste a Shields.io badge URL, preview the raised model, and export a print-ready STL."
-    />
-    <link rel="canonical" href="https://3d.shields.io/" />
-    <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="Badge3D" />
-    <meta property="og:title" content="Badge3D — Turn Shields.io badges into 3D models" />
-    <meta
-      property="og:description"
-      content="Paste a Shields.io badge URL, preview the raised model, and export a print-ready STL."
-    />
-    <meta property="og:url" content="https://3d.shields.io/" />
-    <meta property="og:image" content="https://3d.shields.io/opengraph.png" />
-    <meta property="og:image:type" content="image/png" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta
-      property="og:image:alt"
-      content="Badge3D turning a Shields.io build-passing badge into a print-ready 3D model"
-    />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Badge3D — Turn Shields.io badges into 3D models" />
-    <meta
-      name="twitter:description"
-      content="Paste a Shields.io badge URL, preview the raised model, and export a print-ready STL."
-    />
-    <meta name="twitter:image" content="https://3d.shields.io/opengraph.png" />
-    <meta
-      name="twitter:image:alt"
-      content="Badge3D turning a Shields.io build-passing badge into a print-ready 3D model"
-    />
-    <link rel="icon" type="image/webp" href="/badge3d.webp" />
-    <title>Badge3D — Turn Shields.io badges into 3D models</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+	<head>
+		<meta charset="UTF-8" />
+		<meta content="width=device-width, initial-scale=1.0" name="viewport" />
+		<title>Badge3D — Turn Shields.io badges into 3D models</title>
+		<script>
+			try {
+				const theme = localStorage.getItem('badge3d-color-theme');
+				const isDark =
+					theme === 'dark' ||
+					(theme !== 'light' &&
+						matchMedia('(prefers-color-scheme: dark)').matches);
+				if (theme === 'light' || theme === 'dark')
+					document.documentElement.dataset.theme = theme;
+				document.querySelector('meta[name="theme-color"]').content = isDark
+					? '#171816'
+					: '#f2eee5';
+			} catch {}
+		</script>
+		<meta content="light dark" name="color-scheme" />
+		<!-- eslint-disable-next-line @html-eslint/use-baseline -- Progressive enhancement: unsupported browsers safely ignore theme-color. -->
+		<meta content="#f2eee5" name="theme-color" />
+		<meta
+			content="Paste a Shields.io badge URL, preview the raised model, and export a print-ready STL."
+			name="description"
+		/>
+		<link href="https://3d.shields.io/" rel="canonical" />
+		<meta content="website" property="og:type" />
+		<meta content="Badge3D" property="og:site_name" />
+		<meta
+			content="Badge3D — Turn Shields.io badges into 3D models"
+			property="og:title"
+		/>
+		<meta
+			content="Paste a Shields.io badge URL, preview the raised model, and export a print-ready STL."
+			property="og:description"
+		/>
+		<meta content="https://3d.shields.io/" property="og:url" />
+		<meta content="https://3d.shields.io/opengraph.png" property="og:image" />
+		<meta content="image/png" property="og:image:type" />
+		<meta content="1200" property="og:image:width" />
+		<meta content="630" property="og:image:height" />
+		<meta
+			content="Badge3D turning a Shields.io build-passing badge into a print-ready 3D model"
+			property="og:image:alt"
+		/>
+		<meta content="summary_large_image" name="twitter:card" />
+		<meta
+			content="Badge3D — Turn Shields.io badges into 3D models"
+			name="twitter:title"
+		/>
+		<meta
+			content="Paste a Shields.io badge URL, preview the raised model, and export a print-ready STL."
+			name="twitter:description"
+		/>
+		<meta content="https://3d.shields.io/opengraph.png" name="twitter:image" />
+		<meta
+			content="Badge3D turning a Shields.io build-passing badge into a print-ready 3D model"
+			name="twitter:image:alt"
+		/>
+		<link type="image/webp" href="/badge3d.webp" rel="icon" />
+	</head>
+	<body>
+		<div id="root"></div>
+		<script type="module" src="/src/main.tsx"></script>
+	</body>
 </html>
