@@ -25,10 +25,13 @@ Here are some 3D badges printed and shared by Badge3D users on social media.
 
 <p align="center">
   <a href="https://x.com/RizumuA3/status/2099124602186412098">
-    <img width="300" src="./media/showcase-rizumu.webp" alt="Showcase Rizumu" />
+    <img width="300" src="./media/x-rizumu.webp" alt="Showcase Rizumu on X" />
   </a>
   <a href="https://x.com/LitoMore/status/2101221017922531528">
-    <img width="300" src="./media/showcase-litomore.webp" alt="Showcase LitoMore" />
+    <img width="300" src="./media/x-litomore.webp" alt="Showcase LitoMore on X" />
+  </a>
+  <a href="https://bsky.app/profile/litomore.me/post/3mw4gwrrxes2n">
+    <img width="300" src="./media/bsky-litomore.webp" alt="Showcase LitoMore on Bluesky" />
   </a>
 </p>
 
