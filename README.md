@@ -19,6 +19,19 @@ reloading the page. Print dimensions use their defaults.
 - **Single-color STL** - one universal mesh for single-material printing
 - **Color STL ZIP** - one aligned STL per source color for manual extruder assignment
 
+## CJK text
+
+Chinese (simplified and traditional), Japanese, and Korean text is converted to
+raised outlines in the preview and all export formats, including mixed Latin/CJK
+labels. DejaVu Sans remains the primary font. If it lacks a character, Badge3D
+loads the bundled Noto Sans CJK SC Regular font (about 16 MB) on demand and reuses
+it for the rest of the session. Export becomes available when the model is ready.
+Characters missing from both fonts produce an error instead of placeholder boxes.
+
+Noto Sans CJK uses Simplified Chinese forms for shared Han characters. The font
+is distributed under the [SIL Open Font License](./public/fonts/OFL.txt); see
+[font provenance](./public/fonts/README.md).
+
 ## User showcase
 
 Here are some 3D badges printed and shared by Badge3D users on social media.

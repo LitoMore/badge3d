@@ -246,6 +246,7 @@ export function BadgeWorkshop() {
 	);
 	const [loading, setLoading] = useState(initialBadgeUrl !== DEFAULT_BADGE);
 	const [loadError, setLoadError] = useState('');
+	const [modelReady, setModelReady] = useState(false);
 	const [exporting3mf, setExporting3mf] = useState(false);
 	const [exportError, setExportError] = useState('');
 	const [parameters, setParameters] = useState<ModelParameters>({
@@ -309,6 +310,8 @@ export function BadgeWorkshop() {
 
 	const loadBadge = useCallback(async (nextUrl: string) => {
 		setLoading(true);
+		setModelReady(false);
+		modelRef.current = undefined;
 		setLoadError('');
 		setStatus('Building model…');
 		const controller = new AbortController();
@@ -344,7 +347,6 @@ export function BadgeWorkshop() {
 				...current,
 				radius: nativeRadius * (current.height / sourceHeight),
 			}));
-			setStatus('Ready');
 		} catch (error) {
 			const message =
 				error instanceof DOMException && error.name === 'AbortError'
@@ -444,8 +446,15 @@ export function BadgeWorkshop() {
 		}));
 	};
 
+	const onModelBuilding = useCallback(() => {
+		modelRef.current = undefined;
+		setModelReady(false);
+		setStatus('Preparing text…');
+	}, []);
+
 	const onPreviewError = useCallback((message: string) => {
 		modelRef.current = undefined;
+		setModelReady(false);
 		setSvg('');
 		setLoadError(message);
 		setStatus(message);
@@ -457,6 +466,8 @@ export function BadgeWorkshop() {
 			group.userData.filenameStem = badgeFilenameStem(loadedBadgeUrl);
 			modelRef.current = group;
 			setStats(nextStats);
+			setModelReady(true);
+			setStatus('Ready');
 		},
 		[loadedBadgeUrl],
 	);
@@ -735,6 +746,7 @@ export function BadgeWorkshop() {
 								params={parameters}
 								isAutoRotating={isAutoRotating}
 								resetToken={resetToken}
+								onBuilding={onModelBuilding}
 								onReady={onModelReady}
 								onError={onPreviewError}
 							/>
@@ -864,7 +876,7 @@ export function BadgeWorkshop() {
 						<button
 							className="download-button"
 							type="button"
-							disabled={exporting3mf}
+							disabled={!modelReady || loading || exporting3mf}
 							aria-busy={exporting3mf}
 							onClick={() => {
 								void download3mf();
@@ -875,11 +887,19 @@ export function BadgeWorkshop() {
 							<small>MULTICOLOR PARTS + FILAMENT COLORS</small>
 						</button>
 						<div className="export-secondary">
-							<button type="button" onClick={downloadStl}>
+							<button
+								type="button"
+								disabled={!modelReady || loading}
+								onClick={downloadStl}
+							>
 								<b>SINGLE-COLOR STL</b>
 								<small>UNIVERSAL COMPATIBILITY</small>
 							</button>
-							<button type="button" onClick={downloadColorStls}>
+							<button
+								type="button"
+								disabled={!modelReady || loading}
+								onClick={downloadColorStls}
+							>
 								<b>COLOR STL ZIP</b>
 								<small>SEPARATE ALIGNED PARTS</small>
 							</button>

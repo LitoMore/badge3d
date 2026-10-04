@@ -1,14 +1,14 @@
 import {useEffect, useRef, useState} from 'react';
-import type {Font} from 'opentype.js';
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {
 	type ModelParameters,
 	type ModelStats,
+	type BadgeFonts,
 	buildModel,
 	createSvgTexture,
 	isMesh,
-	loadBadgeFont,
+	loadBadgeFonts,
 	roundedPlateGeometry,
 	svgMetrics,
 } from './badge-model.js';
@@ -18,6 +18,7 @@ type PreviewProps = {
 	readonly params: ModelParameters;
 	readonly isAutoRotating: boolean;
 	readonly resetToken: number;
+	readonly onBuilding: () => void;
 	readonly onReady: (group: THREE.Group, stats: ModelStats) => void;
 	readonly onError: (message: string) => void;
 };
@@ -111,6 +112,7 @@ export function BadgePreview({
 	params,
 	isAutoRotating,
 	resetToken,
+	onBuilding,
 	onReady,
 	onError,
 }: PreviewProps) {
@@ -120,14 +122,18 @@ export function BadgePreview({
 	const controlsRef = useRef<OrbitControls | undefined>(null);
 	const homeViewRef = useRef<PreviewView | undefined>(null);
 	const resetAnimationRef = useRef<PreviewResetAnimation | undefined>(null);
-	const [font, setFont] = useState<Font>();
+	const [loadedFonts, setLoadedFonts] = useState<{
+		svg: string;
+		fonts: BadgeFonts;
+	}>();
 
 	useEffect(() => {
 		let isActive = true;
-		loadBadgeFont()
-			.then((loadedFont) => {
+		onBuilding();
+		loadBadgeFonts(svg)
+			.then((fonts) => {
 				if (isActive) {
-					setFont(loadedFont);
+					setLoadedFonts({svg, fonts});
 				}
 			})
 			.catch(() => {
@@ -138,7 +144,7 @@ export function BadgePreview({
 		return () => {
 			isActive = false;
 		};
-	}, [onError]);
+	}, [svg, onBuilding, onError]);
 
 	useEffect(() => {
 		const host = hostRef.current;
@@ -384,7 +390,7 @@ export function BadgePreview({
 	useEffect(() => {
 		const host = hostRef.current;
 		const scene = host?.scene;
-		if (!scene || !font) {
+		if (!scene || loadedFonts?.svg !== svg) {
 			return;
 		}
 
@@ -405,7 +411,17 @@ export function BadgePreview({
 			});
 		}
 
-		const {group, stats} = buildModel(svg, params, font);
+		let model: ReturnType<typeof buildModel>;
+		try {
+			model = buildModel(svg, params, loadedFonts.fonts);
+		} catch (error) {
+			onError(
+				error instanceof Error ? error.message : 'Unable to build the model.',
+			);
+			return;
+		}
+
+		const {group, stats} = model;
 		group.rotation.x = -0.16;
 		rootRef.current = group;
 		scene.add(group);
@@ -450,7 +466,7 @@ export function BadgePreview({
 		return () => {
 			isActive = false;
 		};
-	}, [svg, params, font, onReady]);
+	}, [svg, params, loadedFonts, onReady, onError]);
 
 	useEffect(() => {
 		if (rootRef.current) {

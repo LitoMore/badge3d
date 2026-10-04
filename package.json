@@ -12,7 +12,7 @@
 		"build": "vite build",
 		"preview": "vite preview",
 		"deploy": "npm run build && WRANGLER_LOG_PATH=.wrangler/wrangler.log wrangler pages deploy dist --project-name=badge3d",
-		"test": "xo",
+		"test": "xo && node --experimental-strip-types --test test/*.test.ts",
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
@@ -36,6 +36,7 @@
 		"@vitejs/plugin-react": "^6.0.2",
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-config-xo-react": "^0.31.0",
+		"happy-dom": "^20.14.5",
 		"tailwindcss": "^4.2.1",
 		"typescript": "^5.9.3",
 		"vite": "^8.0.13",

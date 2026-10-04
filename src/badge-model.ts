@@ -18,22 +18,53 @@ export type ModelStats = {
 };
 
 let badgeFontPromise: Promise<opentype.Font> | undefined;
+let cjkFontPromise: Promise<opentype.Font> | undefined;
+
+export type BadgeFonts = readonly opentype.Font[];
+
+async function fetchFont(url: string) {
+	const response = await fetch(url);
+	if (!response.ok) {
+		throw new Error('Unable to load the outline font. Please try again.');
+	}
+
+	return opentype.parse(await response.arrayBuffer());
+}
 
 export async function loadBadgeFont() {
-	badgeFontPromise ??= fetch(fontUrl)
-		.then(async (response) => {
-			if (!response.ok) {
-				throw new Error('Unable to load the outline font.');
-			}
-
-			return response.arrayBuffer();
-		})
-		.then((buffer) => opentype.parse(buffer))
-		.catch((error: unknown) => {
-			badgeFontPromise = undefined;
-			throw error;
-		});
+	badgeFontPromise ??= fetchFont(fontUrl).catch((error: unknown) => {
+		badgeFontPromise = undefined;
+		throw error;
+	});
 	return badgeFontPromise;
+}
+
+function visibleBadgeText(doc: Document) {
+	return [...doc.querySelectorAll('text')].filter(
+		(node) => !node.closest('[aria-hidden="true"]'),
+	);
+}
+
+export async function loadBadgeFonts(svg: string): Promise<BadgeFonts> {
+	const font = await loadBadgeFont();
+	const {doc} = svgMetrics(svg);
+	const shouldLoadFallback = visibleBadgeText(doc).some((node) =>
+		[...(node.textContent?.trim() ?? '').normalize('NFC')].some(
+			(character) => font.charToGlyphIndex(character) === 0,
+		),
+	);
+	if (!shouldLoadFallback) {
+		return [font];
+	}
+
+	// Serve the full CJK font locally, and fetch it only for missing glyphs.
+	cjkFontPromise ??= fetchFont(
+		`${import.meta.env.BASE_URL}fonts/NotoSansCJKsc-Regular.otf`,
+	).catch((error: unknown) => {
+		cjkFontPromise = undefined;
+		throw error;
+	});
+	return [font, await cjkFontPromise];
 }
 
 function roundedRect(width: number, height: number, radius: number) {
@@ -516,24 +547,32 @@ function appendGlyphCommand(
 	}
 }
 
-function getTextOutline(font: opentype.Font, text: string, fontSize: number) {
+export function getTextOutline(
+	fonts: BadgeFonts,
+	text: string,
+	fontSize: number,
+) {
 	const outline = new opentype.Path();
-	const characters = [...text];
-	const unitScale = fontSize / font.unitsPerEm;
+	const glyphs = [...text.normalize('NFC')].map((character) => {
+		const font = fonts.find((font) => font.charToGlyphIndex(character) !== 0);
+		if (!font) {
+			throw new Error(`No outline font supports the character “${character}”.`);
+		}
+
+		return {font, glyph: font.charToGlyph(character)};
+	});
 	let cursor = 0;
 
-	for (const [index, character] of characters.entries()) {
-		const glyph = font.charToGlyph(character);
+	for (const [index, {font, glyph}] of glyphs.entries()) {
+		const unitScale = fontSize / font.unitsPerEm;
 		for (const command of glyph.path.commands) {
 			appendGlyphCommand(outline, command, cursor, unitScale);
 		}
 
-		const nextCharacter = characters.at(index + 1);
-		const nextGlyph =
-			nextCharacter === undefined ? undefined : font.charToGlyph(nextCharacter);
+		const next = glyphs.at(index + 1);
 		cursor += (glyph.advanceWidth ?? font.unitsPerEm) * unitScale;
-		if (nextGlyph) {
-			cursor += font.getKerningValue(glyph, nextGlyph) * unitScale;
+		if (next?.font === font) {
+			cursor += font.getKerningValue(glyph, next.glyph) * unitScale;
 		}
 	}
 
@@ -608,7 +647,7 @@ function addLogoToGroup(
 export function buildModel(
 	svg: string,
 	parameters: ModelParameters,
-	font: opentype.Font,
+	fonts: BadgeFonts,
 ) {
 	const {doc, width: svgWidth, height: svgHeight, social} = svgMetrics(svg);
 	const mmPerUnit = parameters.height / svgHeight;
@@ -699,9 +738,7 @@ export function buildModel(
 		});
 	}
 
-	const visibleText = [...doc.querySelectorAll('text')].filter(
-		(node) => !node.closest('[aria-hidden="true"]'),
-	);
+	const visibleText = visibleBadgeText(doc);
 
 	for (const node of visibleText) {
 		const content = node.textContent?.trim();
@@ -725,12 +762,18 @@ export function buildModel(
 					) ??
 					'11',
 			) * scale;
-		const outline = getTextOutline(font, content, fontSize);
+		const outline = getTextOutline(fonts, content, fontSize);
 		const bounds = outline.getBoundingBox();
 		const naturalWidth = Math.max(0.001, bounds.x2 - bounds.x1);
 		const desiredWidth = textLength > 0 ? textLength : naturalWidth;
 		const horizontalScale = desiredWidth / naturalWidth;
-		const pathData = outline.toPathData(3);
+		// The serializer's 1-unit closing-point tolerance removes real corners
+		// after glyphs are scaled to badge size (for example, the flat top of 小).
+		const pathData = outline.toPathData({
+			decimalPlaces: 3,
+			optimize: false,
+			flipY: false,
+		});
 		const parsed = new SVGLoader().parse(
 			`<svg xmlns="http://www.w3.org/2000/svg"><path fill="#fff" d="${pathData}"/></svg>`,
 		);
