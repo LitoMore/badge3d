@@ -34,8 +34,8 @@ import {
 const DEFAULT_BADGE = 'https://img.shields.io/badge/build-passing-brightgreen';
 const EXAMPLES = [
 	['BUILD', DEFAULT_BADGE],
-	['COVERAGE', 'https://img.shields.io/badge/coverage-100%25-brightgreen'],
-	['VERSION', 'https://img.shields.io/badge/version-v2.4.1-blue'],
+	['COVERAGE', 'https://img.shields.io/codecov/c/github/codecov/umbrella'],
+	['VERSION', 'https://img.shields.io/npm/v/typescript'],
 	['JSR', 'https://jsr.io/badges/@std/path'],
 ] as const;
 const DEFAULT_MODEL_HEIGHT = 15;
