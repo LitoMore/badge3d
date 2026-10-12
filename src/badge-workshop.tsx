@@ -31,7 +31,8 @@ import {
 	svgMetrics,
 } from './badge-model.js';
 
-const DEFAULT_BADGE = 'https://img.shields.io/badge/build-passing-brightgreen';
+const DEFAULT_BADGE =
+	'https://img.shields.io/badge/build-passing-brightgreen?logo=github';
 const EXAMPLES = [
 	['BUILD', DEFAULT_BADGE],
 	['COVERAGE', 'https://img.shields.io/codecov/c/github/codecov/umbrella'],
