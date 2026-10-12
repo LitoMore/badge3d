@@ -42,8 +42,6 @@ const EXAMPLES = [
 const DEFAULT_MODEL_HEIGHT = 15;
 const DEFAULT_BASE_HEIGHT = 1.5;
 const DEFAULT_RELIEF = 1;
-const DEFAULT_BADGE_SVG =
-	'<svg xmlns="http://www.w3.org/2000/svg" width="88" height="20" role="img" aria-label="build: passing"><title>build: passing</title><filter id="blur"><feGaussianBlur stdDeviation="16"/></filter><linearGradient id="s" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><clipPath id="r"><rect width="88" height="20" rx="3"/></clipPath><g clip-path="url(#r)"><rect width="37" height="20" fill="#555"/><rect x="37" width="51" height="20" fill="#44BB00"/><rect width="88" height="20" fill="url(#s)"/></g><g fill="#fff" text-anchor="middle" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" text-rendering="geometricPrecision" font-size="110"><g transform="scale(.1)"><g aria-hidden="true" fill="#010101"><text x="195" y="150" fill-opacity=".8" filter="url(#blur)" textLength="270">build</text><text x="195" y="150" fill-opacity=".3" textLength="270">build</text></g><text x="195" y="140" textLength="270">build</text></g><g transform="scale(.1)"><g aria-hidden="true" fill="#010101"><text x="615" y="150" fill-opacity=".8" filter="url(#blur)" textLength="410">passing</text><text x="615" y="150" fill-opacity=".3" textLength="410">passing</text></g><text x="615" y="140" textLength="410">passing</text></g></g></svg>';
 
 type AdjustableModelParameter = Exclude<keyof ModelParameters, 'radius'>;
 
@@ -237,15 +235,11 @@ export function BadgeWorkshop() {
 	);
 	const [url, setUrl] = useState(initialBadgeUrl);
 	const [loadedBadgeUrl, setLoadedBadgeUrl] = useState(initialBadgeUrl);
-	const [svg, setSvg] = useState(
-		initialBadgeUrl === DEFAULT_BADGE ? DEFAULT_BADGE_SVG : '',
-	);
+	const [svg, setSvg] = useState('');
 	const [shareFeedback, setShareFeedback] = useState({url: '', message: ''});
 	const shareMessage = shareFeedback.url === url ? shareFeedback.message : '';
-	const [status, setStatus] = useState(
-		initialBadgeUrl === DEFAULT_BADGE ? 'Ready' : 'Building model…',
-	);
-	const [loading, setLoading] = useState(initialBadgeUrl !== DEFAULT_BADGE);
+	const [status, setStatus] = useState('Building model…');
+	const [loading, setLoading] = useState(true);
 	const [loadError, setLoadError] = useState('');
 	const [modelReady, setModelReady] = useState(false);
 	const [exporting3mf, setExporting3mf] = useState(false);
@@ -370,10 +364,6 @@ export function BadgeWorkshop() {
 				'',
 				globalThis.location.pathname + globalThis.location.hash,
 			);
-		}
-
-		if (initialBadgeUrl === DEFAULT_BADGE) {
-			return;
 		}
 
 		const timeout = setTimeout(() => {
